@@ -5,6 +5,7 @@ Release 0 mobile prototype for the private presence-sharing app described in [`P
 ## Included
 
 - Shared home stage with two expressive monkey avatars
+- Three-step first-run flow for monkey customization, private invite, and explicit partner acceptance
 - Partner status card with freshness and location-precision labels
 - Update composer for activity, mood, availability, caption, location, and expiration
 - Hidden, Perch, Nearby, and Trail sharing choices with explicit Trail disclosure
