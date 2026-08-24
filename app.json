@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "Monkey Tracker",
+    "slug": "monkey-tracker",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#F6F1E7"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.monkeytracker.mobile"
+    },
+    "android": {
+      "package": "app.monkeytracker.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#F6F1E7"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
