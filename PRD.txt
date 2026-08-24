@@ -1,0 +1,608 @@
+MONKEY TRACKER
+Product Requirements Document
+
+Version: 1.0
+Status: Draft for MVP
+Product type: Mobile app for long-distance couples
+
+
+1. PRODUCT SUMMARY
+
+Monkey Tracker is a playful presence-sharing app for long-distance couples. It answers “What is my person up to?” without turning the relationship into a surveillance dashboard.
+
+The app combines optional location sharing with expressive check-ins: mood, activity, availability, photos, notes, and a monkey avatar acting out the update. It should feel like Life360 if Life360 were a cute, slightly stupid inside joke between two people.
+
+Example home-screen update:
+
+    Shawn is at the library
+    Fighting for his life with electromagnetics
+    Mood: crispy
+    Free to call after 8:30 PM
+    Last updated 12 minutes ago
+
+The product is “performative” because users do not merely transmit coordinates. They stage a tiny version of what they are doing for their partner: choosing a pose, writing a caption, adding a photo, or setting the scene around their monkey.
+
+
+2. PRODUCT DECISION
+
+Build Couples Mode first.
+
+“Could be for actual monkeys” remains part of the joke, branding, loading messages, and future expansion. It should not become a second set of MVP requirements. A research-oriented Field Notes Mode could be explored later, but couples are the initial customer and use case.
+
+
+3. PROBLEM
+
+Long-distance couples often want low-effort awareness of each other throughout the day. Existing options are incomplete:
+
+- Location-sharing apps show where someone is, but not what they are doing or how they feel.
+- Messaging provides context, but every update requires starting a conversation.
+- Social media is too public and polished.
+- Repeated “wyd?” messages become repetitive and can feel demanding.
+- Constant precise tracking can feel invasive or controlling.
+
+Couples need a private, lightweight way to say, “Here is my little world right now,” and to feel included in their partner’s day without requiring a full conversation.
+
+
+4. VISION
+
+Make distance feel less empty by turning ordinary life into a shared private performance.
+
+Monkey Tracker should create the feeling of glancing across the room at a partner, not checking a tracking device.
+
+
+5. GOALS
+
+MVP goals:
+
+1. Let two partners pair into a private shared space in under two minutes.
+2. Let either partner publish an expressive presence update in under ten seconds.
+3. Make the current state of both partners understandable at a glance.
+4. Support optional, consent-based location context without normalizing constant surveillance.
+5. Encourage several small, affectionate interactions per day.
+6. Give the product a distinctive, screenshot-worthy personality.
+
+Non-goals for MVP:
+
+- Family safety monitoring
+- Emergency response or personal-safety guarantees
+- Parental tracking
+- Public social feeds
+- Group relationships or friend groups
+- Full messaging replacement
+- Fitness tracking
+- Actual wildlife GPS tracking
+- AI relationship advice
+- Desktop or web app
+
+
+6. TARGET USERS
+
+Primary audience:
+
+- Couples currently in a long-distance relationship
+- Couples who travel frequently or have opposite schedules
+- College-age and young-adult couples comfortable with widgets, streaks, photos, and playful apps
+
+Secondary audience:
+
+- Couples who live nearby but enjoy ambient updates
+- Close friends who want a private shared presence space
+
+Primary job to be done:
+
+    When my partner and I are apart, help me feel naturally included in their ordinary day without forcing either of us to constantly text or surrender all privacy.
+
+
+7. PRODUCT PRINCIPLES
+
+1. Expression over surveillance
+   A status should communicate more than a dot on a map.
+
+2. Consent must be obvious
+   Users always know what is being shared, with whom, at what precision, and for how long.
+
+3. Tiny interactions count
+   A reaction, pose, or one-line update should feel meaningful.
+
+4. Cute, not childish
+   The monkeys are expressive and funny, but the product should still feel designed for adults.
+
+5. No punishment for having a life
+   Avoid guilt-heavy alerts, partner comparisons, or aggressive streak loss.
+
+6. Private by default
+   One couple, no follower counts, no public discovery, and no engagement farming.
+
+
+8. BRAND AND PRODUCT LANGUAGE
+
+Working name: Monkey Tracker
+
+Possible tagline:
+
+    See what your monkey is up to.
+
+Suggested product vocabulary:
+
+- Monkey: a user/partner
+- Troop: the private space shared by a couple
+- Perch: a saved place such as Home, Work, Campus, or Gym
+- Monkey Update: a presence post
+- Trail: temporary live-location sharing
+- Banana: lightweight reward/currency
+- Poke: a request for an update
+- Monkey Business: the shared update timeline
+
+Tone:
+
+- Affectionate
+- Absurd
+- Self-aware
+- Occasionally deadpan
+- Never clinical, accusatory, or safety-alarm oriented
+
+Example copy:
+
+- “Your monkey has entered the library.”
+- “No recent monkey business.”
+- “Devin is probably still at work. Last update: 42 min ago.”
+- “Trail disappeared into the jungle.”
+- “Poke sent. Do not abuse your power.”
+
+
+9. CORE EXPERIENCE
+
+The home screen is a small stage containing both users’ monkey avatars.
+
+Each monkey appears in a scene based on its latest update. For example, a monkey studying at the library might sit under a desk lamp surrounded by papers. A monkey at the gym might lift a comically small dumbbell. A monkey marked “sleeping” curls up in a blanket.
+
+The partner card shows:
+
+- Current place or intentionally hidden location
+- Current activity
+- Mood
+- Availability to text/call
+- Optional caption or photo
+- Time of last update
+- Whether the update was manual or inferred
+
+The map is secondary. It provides location context when enabled, but the expressive stage is the default view.
+
+
+10. LOCATION MODEL
+
+Monkey Tracker must support multiple levels of sharing instead of treating precise, continuous location as the default.
+
+Level 0 — Hidden
+No location is shared. The user can still publish mood, activity, and availability.
+
+Level 1 — Perch
+The user manually selects a named place such as “Campus,” “Work,” or “The Zoo.” No coordinates are shown.
+
+Level 2 — Nearby
+The app shares an approximate area or neighborhood. Exact coordinates are not shown.
+
+Level 3 — Trail
+Precise live location is shared for a user-selected duration, such as 15 minutes, 1 hour, or until arrival.
+
+Requirements:
+
+- The selected location level is always visible to the sharing user.
+- Trail automatically expires.
+- Every location display includes a “last updated” timestamp.
+- A partner cannot enable or increase another user’s sharing level.
+- Turning off sharing takes effect immediately.
+- No invisible tracking, stealth mode, or notification when a partner disables sharing.
+- The app must not imply that stale location data is current.
+
+
+11. MVP FEATURES
+
+P0 — Required for launch
+
+11.1 Account and pairing
+
+- Sign up using phone number, email, Apple, or Google.
+- Create a display name and choose/customize a monkey avatar.
+- Invite exactly one partner through a private link or six-digit code.
+- Both users explicitly accept the pairing.
+- Either user can leave the troop at any time.
+- Pairing data becomes inaccessible to the former partner after separation.
+
+11.2 Monkey Updates
+
+A user can publish an update containing:
+
+- Activity from a short preset list or custom text
+- Mood from emoji-style options or custom text
+- Availability: free, text only, busy, or asleep
+- Optional caption
+- Optional photo
+- Location level and place
+- Expiration time: 30 minutes, 2 hours, end of day, or custom
+- Monkey pose/scene selected automatically with manual override
+
+Publishing should require no more than three taps when using recent choices.
+
+11.3 Shared home stage
+
+- Show both avatars and their latest active updates.
+- Visually translate activities and moods into poses/props.
+- Display timestamps and sharing precision clearly.
+- Tap either avatar to see the full update.
+- If an update expires, show the state as unknown instead of retaining it as current.
+
+11.4 Reactions
+
+- React to an update with a small set of affectionate or funny reactions.
+- Allow one short reply of up to 140 characters.
+- Animate reactions on the recipient’s monkey/scene.
+- Do not build threaded chat in MVP.
+
+11.5 Pokes
+
+- Send a playful request for a fresh update.
+- Limit pokes to prevent spam, initially three per user per day.
+- Recipient can mute pokes or all nonessential notifications.
+- A poke never demands location specifically.
+
+11.6 Monkey Business timeline
+
+- Private chronological history of updates, photos, reactions, and shared moments.
+- Default retention: 30 days.
+- Users can save individual moments to a shared scrapbook.
+- Either user can delete their own update.
+
+11.7 Notifications
+
+- Partner posted an update
+- Partner reacted or replied
+- Partner sent a poke
+- Optional reminder to post an update
+- Trail is about to expire
+- Trail has ended
+
+All nonessential notifications are individually configurable.
+
+11.8 Privacy and relationship controls
+
+- Per-update location precision
+- Global location-sharing off switch
+- Block/unpair flow
+- Report flow
+- Data export and account deletion
+- Photo-download permission setting
+- Clear explanation of what the partner can currently see
+
+
+P1 — Strong follow-up features
+
+11.9 Home-screen widget
+
+- Shows partner’s avatar, activity, mood, and last update.
+- Hides sensitive location details on the lock screen by default.
+
+11.10 Shared rituals
+
+- Good morning / good night buttons
+- “Home safe” signal
+- Daily question
+- One-photo-a-day ritual
+- Countdown to next visit
+
+11.11 Couple terrarium
+
+- Shared decorative habitat grows through mutual participation.
+- Users earn bananas for posting, reacting, or completing rituals.
+- Bananas unlock cosmetic items only.
+- Missing a day does not destroy progress or publicly blame either user.
+
+11.12 Smart scenes
+
+- Scene automatically changes based on activity, time, mood, and place.
+- Users can correct the scene when the guess is wrong.
+
+
+P2 — Future exploration
+
+- Multiple visual themes and non-monkey avatars
+- Visit planning and travel countdowns
+- Shared playlists
+- Weekly “Monkey Recap” generated from saved moments
+- Optional friend mode
+- Actual Monkey Mode: field notes, sightings, photos, tags, and research exports
+
+
+12. PRIMARY USER FLOWS
+
+12.1 First-time setup
+
+1. User downloads the app.
+2. User creates an account.
+3. User chooses a monkey and display name.
+4. User creates a troop and sends an invite.
+5. Partner accepts.
+6. Both users independently choose their default sharing level.
+7. The app prompts each person to publish a first update.
+8. Both monkeys appear together on the home stage.
+
+Success condition: both partners are paired and have posted within five minutes.
+
+12.2 Post an update
+
+1. User taps their monkey or the “Update” button.
+2. User selects activity, mood, and availability.
+3. User optionally adds a caption, photo, place, or Trail.
+4. User previews the resulting scene.
+5. User publishes.
+6. Partner receives a notification based on their preferences.
+
+Success condition: a returning user can publish a basic update in under ten seconds.
+
+12.3 Check on a partner
+
+1. User opens the app or widget.
+2. Partner’s stage shows the latest update and its age.
+3. User taps for details or reacts directly.
+4. If the update is stale, the app offers a gentle poke.
+
+Success condition: user understands the partner’s current shared context without opening a map.
+
+12.4 Share a Trail
+
+1. User selects Trail from the update composer.
+2. User chooses a duration or destination-based expiration.
+3. App displays exactly what will be shared.
+4. User confirms.
+5. Partner can view the live trail until expiration.
+6. Sharing user can end it at any time.
+
+Success condition: precise sharing always has informed consent and a clear ending.
+
+
+13. USER STORIES
+
+- As a long-distance partner, I want to see what my person is doing so I feel included in their day.
+- As a busy user, I want to post an update quickly so sharing does not become another chore.
+- As a private person, I want to share my mood without sharing my exact location.
+- As a traveling user, I want to temporarily share my route and arrival so my partner can follow along.
+- As a partner, I want to react to tiny moments without starting a full conversation.
+- As a user, I want old updates to expire so they are not mistaken for my current state.
+- As a user leaving a relationship, I want to revoke access immediately and cleanly.
+- As a couple, we want to collect ordinary moments into something sentimental over time.
+
+
+14. FUNCTIONAL REQUIREMENTS
+
+- Mobile support: iOS and Android.
+- Two-person private spaces only for MVP.
+- New updates should appear for the partner within five seconds under normal network conditions.
+- Update timestamps must reflect the server time of the last successful update.
+- Offline posts should be labeled pending and sent when connectivity returns.
+- Location permissions must use native OS permission flows.
+- Background location is requested only when a user explicitly starts a Trail requiring it.
+- Expired updates must not appear as current.
+- Photos must support removal and basic content reporting.
+- A user’s block or unpair action must immediately stop future data access.
+- Push notifications must avoid exposing sensitive captions or places unless the user opts in.
+
+
+15. NON-FUNCTIONAL REQUIREMENTS
+
+Performance:
+
+- Home screen interactive within two seconds on a typical connection.
+- Update composer opens within 500 milliseconds after initial load.
+- Graceful degraded experience when location or notification permission is denied.
+
+Reliability:
+
+- Target 99.9% service uptime after beta.
+- Failed updates remain editable and retryable.
+- Trail expiration is enforced server-side, not only by the client.
+
+Security and privacy:
+
+- Encrypt data in transit and at rest.
+- Store the minimum location history required for the feature.
+- Do not sell location or relationship data.
+- Do not use location, moods, photos, or captions for ad targeting.
+- Maintain audit logs for pairing, unpairing, and sharing-setting changes.
+- Provide simple account deletion and reasonable data-retention limits.
+
+Accessibility:
+
+- Do not rely on color alone for mood, availability, or location state.
+- Support screen readers, dynamic text, reduced motion, and high contrast.
+- All monkey animations have text equivalents.
+
+
+16. SAFETY AND ABUSE PREVENTION
+
+Location products can enable coercive control. The following are product requirements, not optional polish:
+
+- Sharing is off until each user chooses otherwise.
+- No “Why did they stop sharing?” alert.
+- No score for hours spent sharing precise location.
+- No alerts for unexpected travel or deviation from routine.
+- No ability to remotely change a partner’s settings.
+- No repeated system pressure to enable precise location.
+- Fast, discreet blocking and unpairing.
+- Safety resources accessible from privacy settings.
+- Sensitive content is hidden from notification previews by default.
+- Internal support tools must restrict and log access to location data.
+
+The app must clearly state that it is not an emergency service and that location may be delayed, unavailable, or inaccurate.
+
+
+17. BUSINESS MODEL
+
+Recommended model: freemium subscription for the troop.
+
+Free:
+
+- Pairing
+- Presence updates
+- Basic scenes and avatars
+- Reactions and pokes
+- Perch and limited Trails
+- 30-day timeline
+
+Monkey Plus, approximately $3.99–$5.99 per month per couple:
+
+- Premium monkey outfits and habitats
+- Longer scrapbook history
+- Additional widgets
+- Visit countdowns and weekly recaps
+- More custom places and scene packs
+- Higher-quality photo storage
+
+Do not monetize through advertising or sale of personal/location data.
+
+
+18. SUCCESS METRICS
+
+North-star metric:
+
+    Weekly reciprocating troops: paired couples where both partners post or react on at least three separate days in a week.
+
+Activation:
+
+- Invite acceptance rate
+- Percentage of new troops where both partners post within 24 hours
+- Median time from first signup to paired first update
+
+Engagement:
+
+- Updates per active troop per day
+- Percentage of updates receiving a reaction
+- Active days per troop per week
+- Widget adoption
+- Ritual completion rate
+
+Retention:
+
+- Week 1, Week 4, and Week 12 troop retention
+- Percentage of active troops with participation from both partners
+
+Trust and safety guardrails:
+
+- Unpair/block rate after sharing prompts
+- Percentage of users who understand their current sharing level in usability testing
+- Location-related support and abuse reports
+- Accidental background-location incidents
+- Percentage of Trails that end at the selected time
+
+
+19. MVP ANALYTICS EVENTS
+
+- account_created
+- invite_sent
+- invite_accepted
+- troop_activated
+- update_started
+- update_published
+- update_expired
+- reaction_sent
+- reply_sent
+- poke_sent
+- sharing_level_changed
+- trail_started
+- trail_ended
+- widget_enabled
+- moment_saved
+- notification_setting_changed
+- unpaired
+- account_deleted
+
+Analytics should capture product behavior without storing message text, photo contents, or precise coordinates in the analytics platform.
+
+
+20. RECOMMENDED MVP SCOPE
+
+Release 0 — Clickable prototype
+
+- Pairing simulation
+- Monkey customization
+- Update composer
+- Shared stage
+- Reactions
+- Privacy-setting prototype
+
+Release 1 — Private alpha
+
+- Real authentication and pairing
+- Live updates
+- Perch sharing
+- Expiration
+- Push notifications
+- Timeline
+- Block/unpair
+
+Release 2 — Beta
+
+- Nearby and Trail sharing
+- Photos
+- Widgets
+- Saved moments
+- Reliability, safety, and privacy testing
+
+Release 3 — Public MVP
+
+- Polished scenes and animations
+- Subscription and cosmetics
+- Onboarding experiments
+- App-store launch
+
+
+21. TECHNICAL ASSUMPTIONS
+
+Suggested implementation for a small team:
+
+- Client: React Native with Expo
+- Backend: Supabase or Firebase
+- Authentication: native email/social authentication
+- Realtime updates: Supabase Realtime or Firestore listeners
+- Maps: Mapbox, Google Maps, or Apple Maps depending on cost and platform needs
+- Push: Expo Notifications initially, native services as scale requires
+- Media: private object storage with signed access
+- Analytics: privacy-conscious event analytics with precise location excluded
+
+This is not a final architecture. Background location behavior, battery impact, map pricing, privacy compliance, and store-review rules require technical validation before committing to a provider.
+
+
+22. LAUNCH ACCEPTANCE CRITERIA
+
+The MVP is ready to launch when:
+
+- Two new users can pair without staff assistance.
+- Both users can publish and receive updates reliably.
+- Users can understand the difference between Hidden, Perch, Nearby, and Trail.
+- Trail ends automatically and immediately when manually stopped.
+- Expired updates cannot be mistaken for current information.
+- Blocking/unpairing revokes access in tested scenarios.
+- The main flow works when location permission is denied.
+- Notification previews are private by default.
+- Core screens pass accessibility checks.
+- Crash-free session rate meets the beta target.
+- At least 70% of beta couples say the app helps them feel more present in each other’s day.
+
+
+23. OPEN QUESTIONS
+
+1. Is the home experience primarily a stage, a map, or a vertically split combination?
+2. Should updates expire by default, or remain until replaced?
+3. How much monkey customization is needed for emotional attachment at launch?
+4. Should a troop subscription be purchasable by either partner and cover both?
+5. Are exact live Trails necessary for MVP, or should the first release stop at user-selected Perches?
+6. Should the app support best friends at launch without changing the couples-focused marketing?
+7. How silly can notification copy be before it becomes annoying?
+8. What data, if any, should survive unpairing for a user’s personal archive?
+
+
+24. ONE-SENTENCE PITCH
+
+Monkey Tracker is a private app where long-distance couples turn their location, mood, and everyday activities into cute live scenes—so checking in feels affectionate instead of invasive.
+
+
+END OF DOCUMENT
