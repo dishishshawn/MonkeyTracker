@@ -19,6 +19,14 @@ All data is currently local, in-memory prototype state. Authentication, pairing,
 
 Expo SDK 57 requires Node.js 22.13 or newer.
 
+This workspace has Node.js 22.23.2 installed locally at `.tools/node` (ignored by Git). Activate it for the current shell with:
+
+```sh
+export PATH="$PWD/.tools/node/bin:$PATH"
+```
+
+On another machine, `nvm use` will read the checked-in `.nvmrc`.
+
 ```sh
 npm install
 npx expo install --fix
