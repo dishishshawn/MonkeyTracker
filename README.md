@@ -36,6 +36,18 @@ npm start
 
 Then open the project in Expo Go or launch an iOS/Android simulator from the Expo terminal UI.
 
+## Local Android emulator
+
+This workspace includes a project-local Android 16 `medium_phone` emulator with Google Play APIs. Its SDK, Java runtime, and AVD data live under `.tools/` and are intentionally ignored by Git.
+
+Launch the emulator and open Monkey Tracker with:
+
+```sh
+npm run emulator
+```
+
+The script enables KVM acceleration, waits for Android to boot, starts Metro on localhost, and opens the app through Expo Go. Press `Ctrl+C` to stop Metro; close the emulator window separately when finished.
+
 ## Product guardrails already represented
 
 - Location can be fully disabled and is not required for an update.
