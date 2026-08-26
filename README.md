@@ -17,6 +17,20 @@ Release 0 mobile prototype for the private presence-sharing app described in [`P
 
 All data is currently local, in-memory prototype state. Authentication, pairing, persistence, realtime sync, location services, notifications, and backend-enforced expiration belong to the private-alpha implementation.
 
+## AI handoff
+
+The repository is ready to alternate between Claude Code, Codex, and human
+contributors without relying on chat history:
+
+- [`CLAUDE.md`](./CLAUDE.md) contains durable product rules, architecture,
+  commands, and the repository working agreement. Claude Code loads it as
+  project memory.
+- [`docs/HANDOFF.md`](./docs/HANDOFF.md) records the current implementation,
+  limitations, validation baseline, and recommended next work.
+- `npm run verify` is the shared pre-handoff check.
+
+Update the handoff file whenever a material change makes its snapshot stale.
+
 ## Run
 
 Expo SDK 57 requires Node.js 22.13 or newer.
@@ -32,7 +46,7 @@ On another machine, `nvm use` will read the checked-in `.nvmrc`.
 ```sh
 npm install
 npx expo install --fix
-npm run typecheck
+npm run verify
 npm start
 ```
 
