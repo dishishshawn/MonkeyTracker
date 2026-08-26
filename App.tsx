@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import Slider from '@react-native-community/slider';
 import { Chip } from './src/components/Chip';
 import { MonkeyAvatar } from './src/components/MonkeyAvatar';
 import { colors, shadow } from './src/theme';
@@ -24,13 +25,25 @@ import {
   LocationLevel,
   MonkeyUpdate,
   Mood,
+  Pose,
+  Scene,
 } from './src/types';
 
-const activities: Activity[] = ['Studying', 'Working', 'Eating', 'Chilling', 'Sleeping'];
-const moods: Mood[] = ['Crispy', 'Cozy', 'Focused', 'Wobbly', 'Happy'];
+const activities: Activity[] = ['Studying', 'Working', 'Eating', 'Chilling', 'Sleeping', 'Commuting', 'At the gym', 'Cooking', 'Gaming', 'Out & about'];
+const moods: Mood[] = ['Crispy', 'Cozy', 'Focused', 'Wobbly', 'Happy', 'Tender', 'Sleepy', 'Frazzled', 'Social', 'Quiet'];
 const availabilities: Availability[] = ['Free', 'Text only', 'Busy', 'Asleep'];
 const locations: LocationLevel[] = ['Hidden', 'Perch', 'Nearby', 'Trail'];
-const expirations: Expiration[] = ['30 min', '2 hours', 'End of day'];
+const scenes: Scene[] = ['Auto', 'Desk nest', 'Couch mode', 'Outdoors', 'Café', 'Blanket fort'];
+const poses: Pose[] = ['Auto', 'Waving', 'Locked in', 'Flopped', 'Victory'];
+const expirationOptions: Array<{ label: Expiration; minutes: number | 'day' }> = [
+  { label: '15 min', minutes: 15 },
+  { label: '30 min', minutes: 30 },
+  { label: '1 hour', minutes: 60 },
+  { label: '2 hours', minutes: 120 },
+  { label: '4 hours', minutes: 240 },
+  { label: '8 hours', minutes: 480 },
+  { label: 'End of day', minutes: 'day' },
+];
 
 const initialUpdate: MonkeyUpdate = {
   activity: 'Studying',
@@ -40,7 +53,28 @@ const initialUpdate: MonkeyUpdate = {
   locationLevel: 'Perch',
   place: 'The library',
   expiration: '2 hours',
+  scene: 'Auto',
+  pose: 'Auto',
   updatedAt: new Date(),
+};
+
+function expirationDate(update: MonkeyUpdate) {
+  const option = expirationOptions.find((item) => item.label === update.expiration) ?? expirationOptions[3];
+  if (option?.minutes === 'day') {
+    const end = new Date(update.updatedAt);
+    end.setHours(23, 59, 59, 999);
+    return end;
+  }
+  return new Date(update.updatedAt.getTime() + (option?.minutes ?? 120) * 60_000);
+}
+
+const sceneColors: Record<Scene, string> = {
+  Auto: colors.lime,
+  'Desk nest': '#E8D9B9',
+  'Couch mode': '#D9D0EC',
+  Outdoors: '#C9E3C4',
+  Café: '#E7CBB9',
+  'Blanket fort': '#C9D5DF',
 };
 
 function AppContent() {
@@ -54,6 +88,27 @@ function AppContent() {
   const [notificationsPrivate, setNotificationsPrivate] = useState(true);
   const [reaction, setReaction] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [expired, setExpired] = useState(false);
+
+  useEffect(() => {
+    const remaining = expirationDate(update).getTime() - Date.now();
+    if (remaining <= 0) {
+      setExpired(true);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setExpired(true);
+      setToast('Your status expired. Your current state is now unknown.');
+      setTimeout(() => setToast(null), 4500);
+      if (Platform.OS === 'web' && 'Notification' in globalThis && globalThis.Notification.permission === 'granted') {
+        new globalThis.Notification('Your monkey status expired', {
+          body: 'Your current state is now shown as unknown.',
+        });
+      }
+      Alert.alert('Status expired', 'Your monkey update is no longer shown as current. Post a fresh one whenever you’re ready.');
+    }, remaining);
+    return () => clearTimeout(timer);
+  }, [update]);
 
   const placeLabel = useMemo(() => {
     if (update.locationLevel === 'Hidden') return 'Location hidden';
@@ -73,7 +128,11 @@ function AppContent() {
   };
 
   const publish = () => {
+    if (Platform.OS === 'web' && 'Notification' in globalThis && globalThis.Notification.permission === 'default') {
+      void globalThis.Notification.requestPermission();
+    }
     setUpdate({ ...draft, updatedAt: new Date() });
+    setExpired(false);
     setComposerOpen(false);
     notify('Monkey update published. Tiny world refreshed.');
   };
@@ -109,7 +168,7 @@ function AppContent() {
           <Text style={styles.greeting}>Both monkeys accounted for</Text>
         </View>
 
-        <View style={styles.stage}>
+        <View style={[styles.stage, { backgroundColor: sceneColors[update.scene] }]}>
           <View style={styles.sun} />
           <View style={styles.cloudOne} />
           <View style={styles.cloudTwo} />
@@ -122,9 +181,9 @@ function AppContent() {
             </View>
             <View style={styles.monkeySlot}>
               {reaction && <Text style={styles.reactionBubble}>{reaction}</Text>}
-              <MonkeyAvatar activity={update.activity} accent="#7C5540" />
+              <MonkeyAvatar activity={update.activity} accent="#7C5540" pose={update.pose} />
               <Text style={styles.monkeyName}>Shawn</Text>
-              <Text style={styles.monkeyMeta}>{update.activity} · {update.mood.toLowerCase()}</Text>
+              <Text style={styles.monkeyMeta}>{expired ? 'Status unknown' : `${update.activity} · ${update.mood.toLowerCase()}`}</Text>
             </View>
           </View>
         </View>
@@ -139,14 +198,14 @@ function AppContent() {
               </View>
             </View>
             <View style={styles.precisionBadge}>
-              <Text style={styles.precisionText}>{update.locationLevel}</Text>
+              <Text style={styles.precisionText}>{expired ? 'Expired' : update.locationLevel}</Text>
             </View>
           </View>
-          <Text style={styles.place}>{placeLabel}</Text>
-          <Text style={styles.caption}>{update.caption || `${update.activity}, no further monkey business reported.`}</Text>
+          <Text style={styles.place}>{expired ? 'Current status unknown' : placeLabel}</Text>
+          <Text style={styles.caption}>{expired ? 'This update expired and is no longer presented as current.' : update.caption || `${update.activity}, no further monkey business reported.`}</Text>
           <View style={styles.detailsRow}>
-            <Text style={styles.detailPill}>☻ {update.mood}</Text>
-            <Text style={styles.detailPill}>◷ {update.availability}</Text>
+            <Text style={styles.detailPill}>☻ {expired ? 'Unknown' : update.mood}</Text>
+            <Text style={styles.detailPill}>◷ {expired ? 'Unknown' : update.availability}</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.reactions}>
@@ -323,7 +382,9 @@ interface ComposerProps {
 }
 
 function ComposerModal({ draft, locationEnabled, open, onChange, onClose, onPublish }: ComposerProps) {
+  const [extrasOpen, setExtrasOpen] = useState(false);
   const set = <K extends keyof MonkeyUpdate>(key: K, value: MonkeyUpdate[K]) => onChange({ ...draft, [key]: value });
+  const expirationIndex = Math.max(0, expirationOptions.findIndex((item) => item.label === draft.expiration));
   return (
     <Modal animationType="slide" presentationStyle="pageSheet" visible={open} onRequestClose={onClose}>
       <SafeAreaView style={styles.modalSafe}>
@@ -334,12 +395,13 @@ function ComposerModal({ draft, locationEnabled, open, onChange, onClose, onPubl
             <View style={styles.headerSpacer} />
           </View>
           <ScrollView contentContainerStyle={styles.composer} keyboardShouldPersistTaps="handled">
-            <View style={styles.preview}>
-              <MonkeyAvatar activity={draft.activity} accent="#996744" />
+            <View style={[styles.preview, { backgroundColor: sceneColors[draft.scene] }]}>
+              <MonkeyAvatar activity={draft.activity} accent="#996744" pose={draft.pose} />
               <Text style={styles.previewText}>{draft.activity} · feeling {draft.mood.toLowerCase()}</Text>
+              <Text style={styles.previewDetail}>{draft.scene} · {draft.pose}</Text>
             </View>
-            <Picker label="What are you up to?" items={activities} value={draft.activity} onChange={(v) => set('activity', v as Activity)} />
-            <Picker label="Current flavor" items={moods} value={draft.mood} onChange={(v) => set('mood', v as Mood)} />
+            <Picker horizontal label="What are you up to?" items={activities} value={draft.activity} onChange={(v) => set('activity', v as Activity)} />
+            <Picker horizontal label="Current flavor" items={moods} value={draft.mood} onChange={(v) => set('mood', v as Mood)} />
             <Picker label="Can they reach you?" items={availabilities} value={draft.availability} onChange={(v) => set('availability', v as Availability)} />
             <Text style={styles.fieldLabel}>Add context (optional)</Text>
             <TextInput
@@ -369,7 +431,46 @@ function ComposerModal({ draft, locationEnabled, open, onChange, onClose, onPubl
             {draft.locationLevel === 'Trail' && (
               <View style={styles.warning}><Text style={styles.warningText}>Trail shares precise live location and ends automatically. You can stop it at any time.</Text></View>
             )}
-            <Picker label="This update expires" items={expirations} value={draft.expiration} onChange={(v) => set('expiration', v as Expiration)} />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ expanded: extrasOpen }}
+              onPress={() => setExtrasOpen((value) => !value)}
+              style={styles.extrasToggle}
+            >
+              <View>
+                <Text style={styles.extrasTitle}>Scene extras</Text>
+                <Text style={styles.extrasSummary}>{draft.scene} · {draft.pose}</Text>
+              </View>
+              <Text style={styles.extrasChevron}>{extrasOpen ? '−' : '+'}</Text>
+            </Pressable>
+            {extrasOpen && (
+              <View style={styles.extrasPanel}>
+                <Picker horizontal label="Set the room" items={scenes} value={draft.scene} onChange={(v) => set('scene', v as Scene)} />
+                <Picker horizontal label="Monkey pose" items={poses} value={draft.pose} onChange={(v) => set('pose', v as Pose)} />
+              </View>
+            )}
+            <View style={styles.expirationCard}>
+              <View style={styles.expirationHeading}>
+                <Text style={styles.fieldLabel}>Status expires</Text>
+                <Text style={styles.expirationValue}>{draft.expiration}</Text>
+              </View>
+              <Slider
+                accessibilityLabel={`Status expires in ${draft.expiration}`}
+                minimumValue={0}
+                maximumValue={expirationOptions.length - 1}
+                minimumTrackTintColor={colors.mossDark}
+                maximumTrackTintColor={colors.line}
+                step={1}
+                thumbTintColor={colors.mossDark}
+                value={expirationIndex}
+                onValueChange={(value) => set('expiration', expirationOptions[Math.round(value)]?.label ?? '2 hours')}
+              />
+              <View style={styles.expirationScale}>
+                <Text style={styles.expirationEnd}>15m</Text>
+                <Text style={styles.expirationEnd}>End of day</Text>
+              </View>
+              <Text style={styles.expirationNote}>We’ll notify you when it expires, then show your status as unknown.</Text>
+            </View>
             <Pressable accessibilityRole="button" onPress={onPublish} style={styles.publishButton}>
               <Text style={styles.publishText}>Publish monkey update</Text>
             </Pressable>
@@ -381,11 +482,17 @@ function ComposerModal({ draft, locationEnabled, open, onChange, onClose, onPubl
   );
 }
 
-function Picker({ label, items, value, onChange }: { label: string; items: string[]; value: string; onChange: (value: string) => void }) {
+function Picker({ label, items, value, onChange, horizontal = false }: { label: string; items: string[]; value: string; onChange: (value: string) => void; horizontal?: boolean }) {
   return (
     <View style={styles.field}>
       <Text style={styles.fieldLabel}>{label}</Text>
-      <View style={styles.chips}>{items.map((item) => <Chip key={item} label={item} selected={item === value} onPress={() => onChange(item)} />)}</View>
+      {horizontal ? (
+        <ScrollView horizontal contentContainerStyle={styles.horizontalChips} showsHorizontalScrollIndicator={false}>
+          {items.map((item) => <Chip key={item} label={item} selected={item === value} onPress={() => onChange(item)} />)}
+        </ScrollView>
+      ) : (
+        <View style={styles.chips}>{items.map((item) => <Chip key={item} label={item} selected={item === value} onPress={() => onChange(item)} />)}</View>
+      )}
     </View>
   );
 }
@@ -453,7 +560,7 @@ const styles = StyleSheet.create({
   partnerCard: { marginTop: 16, padding: 17, borderRadius: 24, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line, ...shadow }, cardTopline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, identity: { flexDirection: 'row', alignItems: 'center', flexShrink: 1 }, cardName: { fontSize: 16, color: colors.ink, fontWeight: '800' }, timestamp: { marginTop: 3, color: colors.muted, fontSize: 11 }, precisionBadge: { paddingVertical: 6, paddingHorizontal: 10, borderRadius: 999, backgroundColor: colors.lime }, precisionText: { color: colors.mossDark, fontSize: 11, fontWeight: '800' }, place: { marginTop: 14, fontSize: 22, fontWeight: '800', color: colors.ink, letterSpacing: -0.5 }, caption: { marginTop: 5, color: colors.muted, fontSize: 15, lineHeight: 21 }, detailsRow: { flexDirection: 'row', gap: 8, marginTop: 14 }, detailPill: { color: colors.ink, fontSize: 12, fontWeight: '700', backgroundColor: colors.paper, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 9, overflow: 'hidden' }, divider: { height: 1, backgroundColor: colors.line, marginVertical: 14 }, reactions: { flexDirection: 'row', alignItems: 'center', gap: 7 }, reactionButton: { width: 37, height: 37, borderRadius: 18.5, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.paper }, reactionSelected: { backgroundColor: colors.peach }, reactionText: { fontSize: 18 }, pokeButton: { marginLeft: 'auto', paddingVertical: 9, paddingHorizontal: 16, backgroundColor: colors.ink, borderRadius: 999 }, pokeText: { color: colors.white, fontSize: 12, fontWeight: '800' },
   sectionHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 26, marginBottom: 11 }, sectionTitle: { color: colors.ink, fontSize: 17, fontWeight: '800' }, sectionLink: { color: colors.moss, fontSize: 12, fontWeight: '800' }, timelineCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, padding: 13, borderRadius: 17, borderWidth: 1, borderColor: colors.line }, timelineIcon: { width: 42, height: 42, borderRadius: 13, alignItems: 'center', justifyContent: 'center' }, timelineCopy: { flex: 1, marginLeft: 11 }, timelineTitle: { color: colors.ink, fontSize: 13, fontWeight: '800' }, timelineMeta: { color: colors.muted, fontSize: 10, marginTop: 3 }, timelineHeart: { fontSize: 21, color: colors.muted },
   bottomBar: { position: 'absolute', left: 0, right: 0, bottom: 0, minHeight: 89, paddingBottom: 18, backgroundColor: colors.card, borderTopWidth: 1, borderColor: colors.line, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around' }, navItem: { width: 72, alignItems: 'center', gap: 3 }, navIcon: { fontSize: 22, color: colors.mossDark }, navActive: { fontSize: 10, color: colors.mossDark, fontWeight: '800' }, navText: { fontSize: 10, color: colors.muted, fontWeight: '700' }, updateButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.mossDark, borderRadius: 999, paddingVertical: 12, paddingHorizontal: 21, gap: 5, marginTop: -23, ...shadow }, updatePlus: { color: colors.white, fontSize: 20 }, updateText: { color: colors.white, fontSize: 14, fontWeight: '800' }, toast: { position: 'absolute', left: 24, right: 24, bottom: 105, backgroundColor: colors.ink, borderRadius: 14, padding: 13, alignItems: 'center' }, toastText: { color: colors.white, fontSize: 12, fontWeight: '700' },
-  modalSafe: { flex: 1, backgroundColor: colors.paper }, modalHeader: { height: 62, paddingHorizontal: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderColor: colors.line }, modalTitle: { color: colors.ink, fontSize: 17, fontWeight: '800' }, cancel: { color: colors.muted, fontSize: 15 }, done: { color: colors.moss, fontWeight: '800', fontSize: 15 }, headerSpacer: { width: 44 }, composer: { padding: 20, paddingBottom: 50 }, preview: { height: 182, borderRadius: 24, backgroundColor: colors.lime, alignItems: 'center', justifyContent: 'center', marginBottom: 24 }, previewText: { color: colors.mossDark, fontSize: 13, fontWeight: '800' }, field: { marginBottom: 23 }, fieldLabel: { color: colors.ink, fontSize: 14, fontWeight: '800', marginBottom: 10 }, chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 }, input: { minHeight: 90, borderWidth: 1, borderColor: colors.line, borderRadius: 16, backgroundColor: colors.card, padding: 14, textAlignVertical: 'top', color: colors.ink, fontSize: 15, marginBottom: 23 }, singleInput: { borderWidth: 1, borderColor: colors.line, borderRadius: 14, backgroundColor: colors.card, padding: 14, color: colors.ink, fontSize: 15, marginTop: -13, marginBottom: 23 }, warning: { backgroundColor: '#FFF0D1', borderRadius: 13, padding: 12, marginTop: -13, marginBottom: 23 }, warningText: { color: '#74572B', fontSize: 12, lineHeight: 18, fontWeight: '600' }, publishButton: { backgroundColor: colors.mossDark, borderRadius: 16, alignItems: 'center', padding: 16, marginTop: 6 }, publishText: { color: colors.white, fontSize: 15, fontWeight: '800' }, publishNote: { textAlign: 'center', color: colors.muted, fontSize: 11, lineHeight: 16, marginTop: 10 },
+  modalSafe: { flex: 1, backgroundColor: colors.paper }, modalHeader: { height: 62, paddingHorizontal: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderColor: colors.line }, modalTitle: { color: colors.ink, fontSize: 17, fontWeight: '800' }, cancel: { color: colors.muted, fontSize: 15 }, done: { color: colors.moss, fontWeight: '800', fontSize: 15 }, headerSpacer: { width: 44 }, composer: { padding: 20, paddingBottom: 50 }, preview: { height: 182, borderRadius: 24, backgroundColor: colors.lime, alignItems: 'center', justifyContent: 'center', marginBottom: 24 }, previewText: { color: colors.mossDark, fontSize: 13, fontWeight: '800' }, previewDetail: { color: colors.muted, fontSize: 10, fontWeight: '700', marginTop: 4 }, field: { marginBottom: 23 }, fieldLabel: { color: colors.ink, fontSize: 14, fontWeight: '800', marginBottom: 10 }, chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 }, horizontalChips: { gap: 8, paddingRight: 14 }, input: { minHeight: 90, borderWidth: 1, borderColor: colors.line, borderRadius: 16, backgroundColor: colors.card, padding: 14, textAlignVertical: 'top', color: colors.ink, fontSize: 15, marginBottom: 23 }, singleInput: { borderWidth: 1, borderColor: colors.line, borderRadius: 14, backgroundColor: colors.card, padding: 14, color: colors.ink, fontSize: 15, marginTop: -13, marginBottom: 23 }, warning: { backgroundColor: '#FFF0D1', borderRadius: 13, padding: 12, marginTop: -13, marginBottom: 23 }, warningText: { color: '#74572B', fontSize: 12, lineHeight: 18, fontWeight: '600' }, extrasToggle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line, borderRadius: 16, padding: 15, marginBottom: 18 }, extrasTitle: { color: colors.ink, fontSize: 14, fontWeight: '800' }, extrasSummary: { color: colors.muted, fontSize: 11, marginTop: 4 }, extrasChevron: { color: colors.mossDark, fontSize: 24, fontWeight: '500' }, extrasPanel: { backgroundColor: 'rgba(255,255,255,0.45)', borderRadius: 16, padding: 14, paddingBottom: 0, marginTop: -10, marginBottom: 18 }, expirationCard: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line, borderRadius: 17, padding: 16, marginBottom: 18 }, expirationHeading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, expirationValue: { color: colors.mossDark, fontSize: 13, fontWeight: '900', backgroundColor: colors.lime, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6, overflow: 'hidden' }, expirationScale: { flexDirection: 'row', justifyContent: 'space-between', marginTop: -2 }, expirationEnd: { color: colors.muted, fontSize: 9, fontWeight: '700' }, expirationNote: { color: colors.muted, fontSize: 10, lineHeight: 15, marginTop: 10 }, publishButton: { backgroundColor: colors.mossDark, borderRadius: 16, alignItems: 'center', padding: 16, marginTop: 6 }, publishText: { color: colors.white, fontSize: 15, fontWeight: '800' }, publishNote: { textAlign: 'center', color: colors.muted, fontSize: 11, lineHeight: 16, marginTop: 10 },
   privacyPage: { padding: 20, paddingBottom: 50 }, privacyHero: { alignItems: 'center', padding: 20 }, privacyEmoji: { fontSize: 50 }, privacyTitle: { color: colors.ink, fontSize: 23, fontWeight: '800', marginTop: 8 }, privacyBody: { color: colors.muted, fontSize: 14, lineHeight: 21, textAlign: 'center', marginTop: 7, maxWidth: 310 }, settingsCard: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line, borderRadius: 18, padding: 16, marginTop: 14 }, settingRow: { flexDirection: 'row', alignItems: 'center' }, settingCopy: { flex: 1, paddingRight: 12 }, settingTitle: { color: colors.ink, fontSize: 14, fontWeight: '800' }, settingBody: { color: colors.muted, fontSize: 11, marginTop: 4 }, settingDivider: { height: 1, backgroundColor: colors.line, marginVertical: 16 }, visibilityCard: { backgroundColor: colors.lime, borderRadius: 18, padding: 17, marginTop: 15 }, visibilityLabel: { color: colors.mossDark, fontSize: 9, letterSpacing: 1.4, fontWeight: '900' }, visibilityValue: { color: colors.ink, fontSize: 14, lineHeight: 20, fontWeight: '700', marginTop: 7 }, unpair: { alignItems: 'center', marginTop: 28, padding: 13 }, unpairText: { color: colors.danger, fontSize: 13, fontWeight: '800' }, safetyCopy: { color: colors.muted, textAlign: 'center', fontSize: 10, lineHeight: 15, paddingHorizontal: 20 },
   onboardingSafe: { flex: 1, backgroundColor: colors.paper }, progressTrack: { flexDirection: 'row', gap: 6, paddingHorizontal: 20, paddingTop: 10 }, progressBar: { flex: 1, height: 4, borderRadius: 3, backgroundColor: colors.line }, progressBarActive: { backgroundColor: colors.moss }, onboardingPage: { flexGrow: 1, padding: 25, paddingTop: 52, paddingBottom: 40 }, onboardingKicker: { color: colors.moss, fontSize: 10, letterSpacing: 2.1, fontWeight: '900', textAlign: 'center' }, onboardingTitle: { color: colors.ink, fontSize: 31, lineHeight: 36, letterSpacing: -1, fontWeight: '900', textAlign: 'center', marginTop: 10 }, onboardingBody: { color: colors.muted, fontSize: 15, lineHeight: 22, textAlign: 'center', marginTop: 10, marginBottom: 30 }, onboardingMonkey: { height: 178, borderRadius: 28, backgroundColor: colors.lime, alignItems: 'center', justifyContent: 'center', marginBottom: 28 }, onboardingInput: { borderWidth: 1, borderColor: colors.line, borderRadius: 15, backgroundColor: colors.card, padding: 15, color: colors.ink, fontSize: 16, marginBottom: 23 }, accentRow: { flexDirection: 'row', gap: 14, marginBottom: 34 }, accentChoice: { width: 42, height: 42, borderRadius: 21, borderWidth: 3, borderColor: colors.paper }, accentSelected: { borderColor: colors.ink, transform: [{ scale: 1.08 }] }, onboardingButton: { backgroundColor: colors.mossDark, borderRadius: 16, alignItems: 'center', padding: 16, marginTop: 'auto' }, onboardingButtonText: { color: colors.white, fontSize: 15, fontWeight: '800' }, buttonDisabled: { opacity: 0.35 }, secondaryButton: { alignItems: 'center', padding: 15 }, secondaryButtonText: { color: colors.muted, fontSize: 13, fontWeight: '700' }, inviteCard: { backgroundColor: colors.lime, borderRadius: 25, padding: 30, alignItems: 'center', marginVertical: 30 }, inviteLabel: { color: colors.mossDark, fontSize: 9, letterSpacing: 1.8, fontWeight: '900' }, inviteCode: { color: colors.ink, fontSize: 37, letterSpacing: 6, fontWeight: '900', marginVertical: 17 }, inviteHint: { color: colors.muted, fontSize: 11, lineHeight: 17, textAlign: 'center' }, pairScene: { height: 180, borderRadius: 27, backgroundColor: colors.lime, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginVertical: 25 }, pairPlus: { color: colors.mossDark, fontSize: 25, fontWeight: '900', marginHorizontal: -10, zIndex: 5 }, codeInput: { textAlign: 'center', letterSpacing: 5, fontWeight: '800', fontSize: 19 }, consentNote: { color: colors.muted, textAlign: 'center', fontSize: 10, lineHeight: 16, marginTop: 12, paddingHorizontal: 18 },
 });
