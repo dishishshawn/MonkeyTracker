@@ -30,6 +30,8 @@ Implemented:
 - Real local history with 30-day retention plus save and delete controls.
 - Optional Supabase client services for email authentication, private invite
   pairing, update publication, history reads, unpairing, and realtime updates.
+- Cloud sign-up/sign-in and pairing screens that activate automatically when a
+  Supabase URL and public key are configured.
 - A checked-in Supabase migration with hashed/expiring invite codes, two-person
   membership, authoritative timestamps, retention-aware reads, and RLS.
 
@@ -43,11 +45,11 @@ conflicts with it, preserve the PRD guardrails and resolve the discrepancy.
 pure rules live in `src/domain/`; AsyncStorage is isolated in `src/storage/`;
 and optional cloud calls live in `src/services/`.
 
-The default UI is still a local pairing simulator. Supabase is not provisioned
-and the account screens are not wired because this repository has no project
-URL/key. The adapter and migration are ready for that integration; follow
+The default UI is still a local pairing simulator because Supabase is not yet
+provisioned and the repository has no project URL/key. The account screens,
+sync adapter, CLI configuration, and migration are wired and ready; follow
 `docs/BACKEND.md`. Native background notifications and real location services
-are also not built.
+are not built.
 
 ## Validation baseline
 
@@ -70,7 +72,7 @@ For device behavior on this Linux workspace:
 npm run emulator
 ```
 
-Vitest currently covers eight domain/reducer cases across exact expiration
+Vitest currently covers eleven domain/reducer/mapping cases across expiration
 boundaries, end-of-day behavior, retention, location privacy, and explicit
 pairing consent. There are no component, end-to-end, native-notification, or RLS
 integration tests yet.

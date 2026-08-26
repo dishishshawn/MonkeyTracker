@@ -7,8 +7,8 @@ configuration is present.
 ## Configure a development project
 
 1. Create a Supabase project intended for development, not production data.
-2. Run `supabase/migrations/20260826000000_private_alpha.sql` in the SQL editor or
-   through the Supabase CLI migration workflow.
+2. Authenticate with `npx supabase login`, link with `npx supabase link`, then
+   apply the checked-in migration with `npm run backend:push`.
 3. Copy `.env.example` to `.env` and add the project URL and publishable/anon
    client key. Never use a service-role key in an Expo app.
 4. Configure the authentication redirect URL from `.env` in the Supabase Auth
@@ -18,8 +18,9 @@ configuration is present.
 `src/services/backend.ts` exposes email/password and email-OTP authentication,
 profile/troop reads, invite creation and acceptance, unpairing, update
 publication, current-state and 30-day history reads, and realtime subscriptions.
-The UI remains in local simulator mode until the account flow is explicitly
-connected; this prevents a half-configured backend from breaking the prototype.
+When both public environment values are present, the app automatically enables
+the cloud sign-up/sign-in and real invite screens. Without them, it remains in
+local simulator mode.
 
 ## Privacy boundaries
 
@@ -36,8 +37,6 @@ connected; this prevents a half-configured backend from breaking the prototype.
 
 ## Still required before real-user testing
 
-- Wire the account screen to `requestEmailSignIn` and handle deep links.
-- Map authenticated profile/troop state into the local reducer.
 - Add a scheduled database purge for expired retention data.
 - Configure Expo push credentials and private notification payloads.
 - Run RLS tests with two paired users, an unrelated user, and a former member.

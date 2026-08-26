@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialUpdate, enforceLocationPreference, expirationDate, isUpdateExpired, pruneTimeline, TIMELINE_RETENTION_MS } from './updates';
+import { createInitialUpdate, enforceLocationPreference, enforceTrailExpiration, expirationDate, expirationOptionsFor, isUpdateExpired, pruneTimeline, TIMELINE_RETENTION_MS } from './updates';
 
 describe('update expiration', () => {
   it('stays current immediately before its boundary and expires at the boundary', () => {
@@ -24,6 +24,12 @@ describe('privacy and retention', () => {
     const update = { ...createInitialUpdate(), locationLevel: 'Trail' as const };
     expect(enforceLocationPreference(update, false).locationLevel).toBe('Hidden');
     expect(enforceLocationPreference(update, true).locationLevel).toBe('Trail');
+  });
+
+  it('limits precise Trail sharing to one hour', () => {
+    const update = { ...createInitialUpdate(), locationLevel: 'Trail' as const, expiration: '8 hours' as const };
+    expect(enforceTrailExpiration(update).expiration).toBe('1 hour');
+    expect(expirationOptionsFor('Trail').map((option) => option.label)).toEqual(['15 min', '30 min', '1 hour']);
   });
 
   it('removes entries older than 30 days', () => {

@@ -9,6 +9,7 @@ export type AppAction =
   | { type: 'setNotificationsPrivate'; enabled: boolean }
   | { type: 'deleteTimelineEntry'; id: string }
   | { type: 'toggleSaved'; id: string }
+  | { type: 'syncRemote'; currentUpdate: MonkeyUpdate; timeline: TimelineEntry[] }
   | { type: 'leaveTroop'; now: string };
 
 export function createInitialAppState(now = new Date()): PersistedAppState {
@@ -55,6 +56,12 @@ export function appReducer(state: PersistedAppState, action: AppAction): Persist
       return {
         ...state,
         timeline: state.timeline.map((entry) => entry.id === action.id ? { ...entry, saved: !entry.saved } : entry),
+      };
+    case 'syncRemote':
+      return {
+        ...state,
+        currentUpdate: action.currentUpdate,
+        timeline: pruneTimeline(action.timeline),
       };
     case 'leaveTroop': {
       const reset = createInitialAppState(new Date(action.now));
