@@ -23,6 +23,9 @@ fi
 echo "Checking TypeScript..."
 npm run typecheck
 
+echo "Running domain tests..."
+npm test
+
 echo "Checking Expo dependency compatibility..."
 CI=1 \
   __UNSAFE_EXPO_HOME_DIRECTORY="$project_root/.tools/expo" \

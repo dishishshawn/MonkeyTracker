@@ -1,0 +1,147 @@
+import { RealtimeChannel } from '@supabase/supabase-js';
+import { expirationDate } from '../domain/updates';
+import { MonkeyUpdate } from '../types';
+import { requireSupabase } from './supabase';
+
+export interface RemoteUpdate {
+  id: string;
+  troop_id: string;
+  user_id: string;
+  activity: string;
+  mood: string;
+  availability: string;
+  caption: string | null;
+  location_level: string;
+  place: string | null;
+  expiration: string;
+  scene: string;
+  pose: string;
+  updated_at: string;
+  expires_at: string;
+  created_at: string;
+}
+
+export interface RemoteProfile {
+  id: string;
+  display_name: string;
+  avatar_accent: string;
+}
+
+export interface ActiveTroop {
+  troopId: string;
+  memberCount: number;
+}
+
+export async function signUpWithEmail(email: string, password: string, displayName: string, avatarAccent: string): Promise<void> {
+  const { error } = await requireSupabase().auth.signUp({
+    email: email.trim(),
+    password,
+    options: { data: { display_name: displayName.trim(), avatar_accent: avatarAccent } },
+  });
+  if (error) throw error;
+}
+
+export async function signInWithEmail(email: string, password: string): Promise<void> {
+  const { error } = await requireSupabase().auth.signInWithPassword({ email: email.trim(), password });
+  if (error) throw error;
+}
+
+export async function requestEmailSignIn(email: string): Promise<void> {
+  const client = requireSupabase();
+  const redirectTo = process.env.EXPO_PUBLIC_AUTH_REDIRECT_URL?.trim();
+  const { error } = await client.auth.signInWithOtp({
+    email: email.trim(),
+    options: redirectTo ? { emailRedirectTo: redirectTo } : undefined,
+  });
+  if (error) throw error;
+}
+
+export async function signOut(): Promise<void> {
+  const { error } = await requireSupabase().auth.signOut();
+  if (error) throw error;
+}
+
+export async function loadMyProfile(): Promise<RemoteProfile | null> {
+  const { data: authData, error: authError } = await requireSupabase().auth.getUser();
+  if (authError) throw authError;
+  if (!authData.user) return null;
+  const { data, error } = await requireSupabase().from('profiles').select('id, display_name, avatar_accent').eq('id', authData.user.id).maybeSingle();
+  if (error) throw error;
+  return data as RemoteProfile | null;
+}
+
+export async function loadActiveTroop(): Promise<ActiveTroop | null> {
+  const client = requireSupabase();
+  const { data: authData, error: authError } = await client.auth.getUser();
+  if (authError) throw authError;
+  if (!authData.user) return null;
+  const { data: membership, error } = await client.from('troop_members').select('troop_id').eq('user_id', authData.user.id).is('left_at', null).maybeSingle();
+  if (error) throw error;
+  if (!membership) return null;
+  const { count, error: countError } = await client.from('troop_members').select('*', { count: 'exact', head: true }).eq('troop_id', membership.troop_id).is('left_at', null);
+  if (countError) throw countError;
+  return { troopId: membership.troop_id as string, memberCount: count ?? 0 };
+}
+
+export async function createTroopInvite(): Promise<string> {
+  const { data, error } = await requireSupabase().rpc('create_troop_invite');
+  if (error) throw error;
+  if (typeof data !== 'string') throw new Error('Supabase did not return an invite code.');
+  return data;
+}
+
+export async function acceptTroopInvite(code: string): Promise<string> {
+  const { data, error } = await requireSupabase().rpc('accept_troop_invite', { invite_code: code.trim() });
+  if (error) throw error;
+  if (typeof data !== 'string') throw new Error('Supabase did not return a troop ID.');
+  return data;
+}
+
+export async function leaveTroop(troopId: string): Promise<void> {
+  const { error } = await requireSupabase().rpc('leave_troop', { target_troop_id: troopId });
+  if (error) throw error;
+}
+
+export async function publishRemoteUpdate(troopId: string, update: MonkeyUpdate): Promise<RemoteUpdate> {
+  const payload = {
+    troop_id: troopId,
+    activity: update.activity,
+    mood: update.mood,
+    availability: update.availability,
+    caption: update.caption || null,
+    location_level: update.locationLevel,
+    place: update.locationLevel === 'Hidden' ? null : update.place,
+    expiration: update.expiration,
+    scene: update.scene,
+    pose: update.pose,
+    updated_at: update.updatedAt,
+    expires_at: expirationDate(update).toISOString(),
+  };
+  const { data, error } = await requireSupabase().from('monkey_updates').insert(payload).select().single();
+  if (error) throw error;
+  return data as RemoteUpdate;
+}
+
+export async function loadRemoteTimeline(troopId: string): Promise<RemoteUpdate[]> {
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await requireSupabase().from('monkey_updates').select('*').eq('troop_id', troopId).gte('created_at', since).order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as RemoteUpdate[];
+}
+
+export async function loadCurrentRemoteUpdates(troopId: string): Promise<RemoteUpdate[]> {
+  const { data, error } = await requireSupabase().from('monkey_updates').select('*').eq('troop_id', troopId).gt('expires_at', new Date().toISOString()).order('updated_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as RemoteUpdate[];
+}
+
+export function subscribeToTroopUpdates(troopId: string, onChange: () => void): RealtimeChannel {
+  return requireSupabase()
+    .channel(`troop-updates:${troopId}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'monkey_updates', filter: `troop_id=eq.${troopId}` }, onChange)
+    .subscribe();
+}
+
+export async function unsubscribe(channel: RealtimeChannel): Promise<void> {
+  await requireSupabase().removeChannel(channel);
+}

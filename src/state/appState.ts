@@ -1,0 +1,66 @@
+import { createInitialUpdate, enforceLocationPreference, pruneTimeline } from '../domain/updates';
+import { MonkeyUpdate, PersistedAppState, Profile, TimelineEntry } from '../types';
+
+export type AppAction =
+  | { type: 'hydrate'; state: PersistedAppState }
+  | { type: 'completePairing'; profile: Profile; consentAccepted: boolean }
+  | { type: 'publish'; update: MonkeyUpdate; entry: TimelineEntry }
+  | { type: 'setLocationEnabled'; enabled: boolean }
+  | { type: 'setNotificationsPrivate'; enabled: boolean }
+  | { type: 'deleteTimelineEntry'; id: string }
+  | { type: 'toggleSaved'; id: string }
+  | { type: 'leaveTroop'; now: string };
+
+export function createInitialAppState(now = new Date()): PersistedAppState {
+  return {
+    version: 1,
+    paired: false,
+    profile: { name: 'You', accent: '#996744' },
+    currentUpdate: createInitialUpdate(now),
+    timeline: [],
+    preferences: {
+      locationEnabled: false,
+      notificationsPrivate: true,
+    },
+  };
+}
+
+export function appReducer(state: PersistedAppState, action: AppAction): PersistedAppState {
+  switch (action.type) {
+    case 'hydrate':
+      return { ...action.state, timeline: pruneTimeline(action.state.timeline) };
+    case 'completePairing':
+      if (!action.consentAccepted || !action.profile.name.trim()) return state;
+      return { ...state, paired: true, profile: action.profile };
+    case 'publish': {
+      const update = enforceLocationPreference(action.update, state.preferences.locationEnabled);
+      const entry = { ...action.entry, update };
+      return {
+        ...state,
+        currentUpdate: update,
+        timeline: pruneTimeline([entry, ...state.timeline]),
+      };
+    }
+    case 'setLocationEnabled':
+      return {
+        ...state,
+        currentUpdate: enforceLocationPreference(state.currentUpdate, action.enabled),
+        preferences: { ...state.preferences, locationEnabled: action.enabled },
+      };
+    case 'setNotificationsPrivate':
+      return { ...state, preferences: { ...state.preferences, notificationsPrivate: action.enabled } };
+    case 'deleteTimelineEntry':
+      return { ...state, timeline: state.timeline.filter((entry) => entry.id !== action.id) };
+    case 'toggleSaved':
+      return {
+        ...state,
+        timeline: state.timeline.map((entry) => entry.id === action.id ? { ...entry, saved: !entry.saved } : entry),
+      };
+    case 'leaveTroop': {
+      const reset = createInitialAppState(new Date(action.now));
+      return { ...reset, profile: state.profile };
+    }
+    default:
+      return state;
+  }
+}

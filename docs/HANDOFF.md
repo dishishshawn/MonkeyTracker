@@ -8,7 +8,7 @@ without reconstructing the project from chat history.
 
 ## Current state
 
-Release 0 is a polished, local-only Expo prototype. It runs in a lightweight
+Release 0 is a polished, local-first Expo prototype. It runs in a lightweight
 browser preview and in Expo Go on the project-local Android emulator.
 
 Implemented:
@@ -24,21 +24,30 @@ Implemented:
 - Compact horizontal selectors with expanded activity, mood, room, pose, and
   scene-extra choices.
 - Hidden, Perch, Nearby, and Trail sharing modes with explicit Trail disclosure.
-- Reactions, a playful poke, privacy controls, and a small timeline preview.
+- Reactions, a playful poke, and persistent privacy controls.
+- AsyncStorage persistence for pairing, profile, preferences, current status,
+  and timeline across reloads.
+- Real local history with 30-day retention plus save and delete controls.
+- Optional Supabase client services for email authentication, private invite
+  pairing, update publication, history reads, unpairing, and realtime updates.
+- A checked-in Supabase migration with hashed/expiring invite codes, two-person
+  membership, authoritative timestamps, retention-aware reads, and RLS.
 
 The source of truth for intended product behavior is `PRD.txt`. If this summary
 conflicts with it, preserve the PRD guardrails and resolve the discrepancy.
 
 ## Architecture
 
-`App.tsx` is currently a prototype monolith: it contains the screen flow,
-in-memory state, expiry timer, browser notification integration, and most UI.
-Reusable pieces live in `src/components/`; domain types and tokens live in
-`src/types.ts` and `src/theme.ts`.
+`App.tsx` is now a small coordinator. Screens and modal UI live in
+`src/screens/` and `src/components/`; the reducer and hook live in `src/state/`;
+pure rules live in `src/domain/`; AsyncStorage is isolated in `src/storage/`;
+and optional cloud calls live in `src/services/`.
 
-There is no backend or persistent local storage. Reloading the app resets state.
-Authentication, invitations, pairing, realtime sync, database-enforced expiry,
-native background notifications, and real location services are not built.
+The default UI is still a local pairing simulator. Supabase is not provisioned
+and the account screens are not wired because this repository has no project
+URL/key. The adapter and migration are ready for that integration; follow
+`docs/BACKEND.md`. Native background notifications and real location services
+are also not built.
 
 ## Validation baseline
 
@@ -61,24 +70,27 @@ For device behavior on this Linux workspace:
 npm run emulator
 ```
 
-There are no automated unit, component, or end-to-end tests yet.
+Vitest currently covers eight domain/reducer cases across exact expiration
+boundaries, end-of-day behavior, retention, location privacy, and explicit
+pairing consent. There are no component, end-to-end, native-notification, or RLS
+integration tests yet.
+
+`npm audit --omit=dev` currently reports 10 moderate advisories inherited
+through Expo tooling and its `xcode`/`uuid` chain, with no high or critical
+findings. npm's suggested automatic resolution is an incompatible Expo
+downgrade, so it was not applied.
 
 ## Recommended next work
 
-1. Split `App.tsx` into screens, focused components, and a small state hook or
-   reducer without changing the current visual behavior.
-2. Add local persistence so onboarding, preferences, and the latest status
-   survive reloads. Keep expiration semantics based on absolute timestamps.
-3. Add tests for expiration boundaries, location-off behavior, and onboarding
-   consent before extending the feature surface.
-4. Turn the timeline preview into real local history with explicit retention
-   and delete controls.
-5. Only then introduce the private-alpha backend: authentication, one-couple
-   pairing, row-level access control, realtime updates, and server-enforced TTL.
-
-Before any backend work, record the proposed data model and privacy boundaries
-here. Exact location must have narrow access, short retention, and no analytics
-or log leakage.
+1. Create a development Supabase project, apply the migration, and configure
+   `.env` using `.env.example`.
+2. Wire account and real invite screens to the existing backend adapter, then
+   synchronize remote updates into the reducer while retaining offline edits.
+3. Add automated RLS tests for a paired couple, an unrelated user, and a former
+   member before putting real relationship or location data into the project.
+4. Add native scheduled expiration/Trail notifications with private payloads.
+5. Add real permission-gated Perch/location services only after device privacy
+   and battery testing.
 
 ## Environment notes
 

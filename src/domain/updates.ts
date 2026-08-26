@@ -1,0 +1,82 @@
+import {
+  Activity,
+  Availability,
+  Expiration,
+  LocationLevel,
+  MonkeyUpdate,
+  Mood,
+  Pose,
+  Scene,
+  TimelineEntry,
+} from '../types';
+
+export const activities: Activity[] = ['Studying', 'Working', 'Eating', 'Chilling', 'Sleeping', 'Commuting', 'At the gym', 'Cooking', 'Gaming', 'Out & about'];
+export const moods: Mood[] = ['Crispy', 'Cozy', 'Focused', 'Wobbly', 'Happy', 'Tender', 'Sleepy', 'Frazzled', 'Social', 'Quiet'];
+export const availabilities: Availability[] = ['Free', 'Text only', 'Busy', 'Asleep'];
+export const locationLevels: LocationLevel[] = ['Hidden', 'Perch', 'Nearby', 'Trail'];
+export const scenes: Scene[] = ['Auto', 'Desk nest', 'Couch mode', 'Outdoors', 'Café', 'Blanket fort'];
+export const poses: Pose[] = ['Auto', 'Waving', 'Locked in', 'Flopped', 'Victory'];
+
+export const expirationOptions: Array<{ label: Expiration; minutes: number | 'day' }> = [
+  { label: '15 min', minutes: 15 },
+  { label: '30 min', minutes: 30 },
+  { label: '1 hour', minutes: 60 },
+  { label: '2 hours', minutes: 120 },
+  { label: '4 hours', minutes: 240 },
+  { label: '8 hours', minutes: 480 },
+  { label: 'End of day', minutes: 'day' },
+];
+
+export const TIMELINE_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
+
+export function createInitialUpdate(now = new Date()): MonkeyUpdate {
+  return {
+    activity: 'Studying',
+    mood: 'Crispy',
+    availability: 'Busy',
+    caption: 'Fighting for my life with electromagnetics',
+    locationLevel: 'Hidden',
+    place: 'The library',
+    expiration: '2 hours',
+    scene: 'Auto',
+    pose: 'Auto',
+    updatedAt: now.toISOString(),
+  };
+}
+
+export function expirationDate(update: MonkeyUpdate): Date {
+  const start = new Date(update.updatedAt);
+  const option = expirationOptions.find((item) => item.label === update.expiration) ?? { label: '2 hours' as const, minutes: 120 };
+  if (option.minutes === 'day') {
+    const end = new Date(start);
+    end.setHours(23, 59, 59, 999);
+    return end;
+  }
+  return new Date(start.getTime() + option.minutes * 60_000);
+}
+
+export function isUpdateExpired(update: MonkeyUpdate, now = Date.now()): boolean {
+  return expirationDate(update).getTime() <= now;
+}
+
+export function enforceLocationPreference(update: MonkeyUpdate, locationEnabled: boolean): MonkeyUpdate {
+  return locationEnabled ? update : { ...update, locationLevel: 'Hidden' };
+}
+
+export function placeLabel(update: MonkeyUpdate): string {
+  if (update.locationLevel === 'Hidden') return 'Location hidden';
+  if (update.locationLevel === 'Nearby') return `Near ${update.place}`;
+  if (update.locationLevel === 'Trail') return `Live near ${update.place}`;
+  return update.place;
+}
+
+export function pruneTimeline(entries: TimelineEntry[], now = Date.now()): TimelineEntry[] {
+  return entries.filter((entry) => {
+    const createdAt = new Date(entry.createdAt).getTime();
+    return Number.isFinite(createdAt) && now - createdAt <= TIMELINE_RETENTION_MS;
+  });
+}
+
+export function timelineId(now = Date.now()): string {
+  return `update-${now}-${Math.random().toString(36).slice(2, 8)}`;
+}

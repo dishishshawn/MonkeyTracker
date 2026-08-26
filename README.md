@@ -13,9 +13,13 @@ Release 0 mobile prototype for the private presence-sharing app described in [`P
 - Hidden, Perch, Nearby, and Trail sharing choices with explicit Trail disclosure
 - Lightweight reactions and a playful poke
 - Privacy controls with a global location kill switch and private notification previews
-- Small Monkey Business timeline preview
+- Persistent onboarding, privacy preferences, and current status across reloads
+- Real 30-day Monkey Business timeline with save and delete controls
+- Optional Supabase adapter and RLS migration for private-alpha development
 
-All data is currently local, in-memory prototype state. Authentication, pairing, persistence, realtime sync, location services, notifications, and backend-enforced expiration belong to the private-alpha implementation.
+The default simulator stores prototype data locally on the device. A Supabase
+private-alpha foundation is checked in but remains disabled until a development
+project is configured; see [`docs/BACKEND.md`](./docs/BACKEND.md).
 
 ## AI handoff
 
@@ -44,13 +48,15 @@ export PATH="$PWD/.tools/node/bin:$PATH"
 On another machine, `nvm use` will read the checked-in `.nvmrc`.
 
 ```sh
-npm install
-npx expo install --fix
+npm ci
 npm run verify
 npm start
 ```
 
 Then open the project in Expo Go or launch an iOS/Android simulator from the Expo terminal UI.
+
+`npm run verify` runs strict TypeScript checks, domain tests, and Expo dependency
+compatibility validation.
 
 ## Local Android emulator
 
