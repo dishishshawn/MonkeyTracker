@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme';
-import { Activity } from '../types';
+import { Activity, Pose } from '../types';
 
 const props: Record<Activity, string> = {
   Studying: '📚',
@@ -8,15 +8,29 @@ const props: Record<Activity, string> = {
   Eating: '🍜',
   Chilling: '🎧',
   Sleeping: '💤',
+  Commuting: '🚌',
+  'At the gym': '🏋️',
+  Cooking: '🍳',
+  Gaming: '🎮',
+  'Out & about': '✨',
 };
 
 interface MonkeyAvatarProps {
   activity: Activity;
   accent: string;
   size?: 'small' | 'large';
+  pose?: Pose;
 }
 
-export function MonkeyAvatar({ activity, accent, size = 'large' }: MonkeyAvatarProps) {
+const poseMarks: Record<Pose, string> = {
+  Auto: '',
+  Waving: '👋',
+  'Locked in': '😤',
+  Flopped: '🫠',
+  Victory: '🏆',
+};
+
+export function MonkeyAvatar({ activity, accent, size = 'large', pose = 'Auto' }: MonkeyAvatarProps) {
   const compact = size === 'small';
   return (
     <View accessibilityLabel={`Monkey avatar ${activity.toLowerCase()}`} style={[styles.wrap, compact && styles.wrapSmall]}>
@@ -29,6 +43,7 @@ export function MonkeyAvatar({ activity, accent, size = 'large' }: MonkeyAvatarP
         </View>
       </View>
       {!compact && <Text style={styles.prop}>{props[activity]}</Text>}
+      {!compact && pose !== 'Auto' && <Text style={styles.pose}>{poseMarks[pose]}</Text>}
     </View>
   );
 }
@@ -46,4 +61,5 @@ const styles = StyleSheet.create({
   mouth: { color: colors.ink, fontSize: 24, lineHeight: 24, marginTop: -3 },
   mouthSmall: { fontSize: 13, lineHeight: 13 },
   prop: { position: 'absolute', zIndex: 3, right: -3, bottom: 2, fontSize: 35, transform: [{ rotate: '7deg' }] },
+  pose: { position: 'absolute', zIndex: 4, left: -4, bottom: 4, fontSize: 30, transform: [{ rotate: '-8deg' }] },
 });
