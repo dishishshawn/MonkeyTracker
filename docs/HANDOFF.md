@@ -17,6 +17,8 @@ Implemented:
 - Three-step first-run flow: monkey customization, private invite, and explicit
   partner acceptance.
 - Shared home stage with two expressive monkey avatars.
+- Five selectable monkey colorways, including a blue-fur and pink-blush
+  `Blueberry blush` palette shared by local setup, cloud signup, and previews.
 - Partner status card with freshness and location-precision labels.
 - Update composer for activity, mood, availability, caption, location sharing,
   scene, pose, and expiration.
@@ -58,7 +60,7 @@ notifications and real location services are not built.
 
 ## Validation baseline
 
-At this checkpoint, TypeScript validation, eleven tests, and production exports
+At this checkpoint, TypeScript validation, thirteen tests, and production exports
 for web and Android pass with the hosted public configuration. Auth health and
 an unauthenticated RLS read were also checked against the live project. Run the
 common local check with:
@@ -79,11 +81,11 @@ For device behavior on this Linux workspace:
 npm run emulator
 ```
 
-Vitest covers eleven domain/reducer/mapping cases across expiration
-boundaries, end-of-day behavior, retention, location privacy, and explicit
-pairing consent. `npm run backend:verify-hosted` covers live pair acceptance,
-partner update visibility, outsider isolation, and post-unpair revocation using
-temporary users that are deleted after the run. There are no component,
+Vitest covers thirteen domain/reducer/mapping/colorway cases across expiration
+boundaries, end-of-day behavior, retention, location privacy, explicit pairing
+consent, and avatar palette fallback. `npm run backend:verify-hosted` covers live
+pair acceptance, partner update visibility, outsider isolation, and post-unpair
+revocation using temporary users that are deleted after the run. There are no component,
 full UI end-to-end, or native-notification tests yet.
 
 `npm audit --omit=dev` currently reports 10 moderate advisories inherited
