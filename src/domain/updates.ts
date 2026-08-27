@@ -27,6 +27,19 @@ export const expirationOptions: Array<{ label: Expiration; minutes: number | 'da
   { label: 'End of day', minutes: 'day' },
 ];
 
+const trailExpirations: Expiration[] = ['15 min', '30 min', '1 hour'];
+
+export function expirationOptionsFor(locationLevel: LocationLevel) {
+  return locationLevel === 'Trail'
+    ? expirationOptions.filter((option) => trailExpirations.includes(option.label))
+    : expirationOptions;
+}
+
+export function enforceTrailExpiration(update: MonkeyUpdate): MonkeyUpdate {
+  if (update.locationLevel !== 'Trail' || trailExpirations.includes(update.expiration)) return update;
+  return { ...update, expiration: '1 hour' };
+}
+
 export const TIMELINE_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
 export function createInitialUpdate(now = new Date()): MonkeyUpdate {
@@ -60,7 +73,7 @@ export function isUpdateExpired(update: MonkeyUpdate, now = Date.now()): boolean
 }
 
 export function enforceLocationPreference(update: MonkeyUpdate, locationEnabled: boolean): MonkeyUpdate {
-  return locationEnabled ? update : { ...update, locationLevel: 'Hidden' };
+  return enforceTrailExpiration(locationEnabled ? update : { ...update, locationLevel: 'Hidden' });
 }
 
 export function placeLabel(update: MonkeyUpdate): string {

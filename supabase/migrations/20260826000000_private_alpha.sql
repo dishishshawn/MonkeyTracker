@@ -40,24 +40,40 @@ create table public.monkey_updates (
   id uuid primary key default gen_random_uuid(),
   troop_id uuid not null references public.troops(id) on delete cascade,
   user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
-  activity text not null,
-  mood text not null,
-  availability text not null,
+  activity text not null check (activity in ('Studying', 'Working', 'Eating', 'Chilling', 'Sleeping', 'Commuting', 'At the gym', 'Cooking', 'Gaming', 'Out & about')),
+  mood text not null check (mood in ('Crispy', 'Cozy', 'Focused', 'Wobbly', 'Happy', 'Tender', 'Sleepy', 'Frazzled', 'Social', 'Quiet')),
+  availability text not null check (availability in ('Free', 'Text only', 'Busy', 'Asleep')),
   caption text check (caption is null or char_length(caption) <= 140),
   location_level text not null check (location_level in ('Hidden', 'Perch', 'Nearby', 'Trail')),
-  place text,
-  expiration text not null,
-  scene text not null,
-  pose text not null,
+  place text check (place is null or char_length(place) <= 80),
+  expiration text not null check (expiration in ('15 min', '30 min', '1 hour', '2 hours', '4 hours', '8 hours', 'End of day')),
+  scene text not null check (scene in ('Auto', 'Desk nest', 'Couch mode', 'Outdoors', 'Café', 'Blanket fort')),
+  pose text not null check (pose in ('Auto', 'Waving', 'Locked in', 'Flopped', 'Victory')),
   updated_at timestamptz not null default now(),
   expires_at timestamptz not null,
   created_at timestamptz not null default now(),
   check (location_level <> 'Hidden' or place is null),
+  check (location_level <> 'Trail' or expiration in ('15 min', '30 min', '1 hour')),
   check (expires_at > updated_at)
 );
 
 create index monkey_updates_troop_created on public.monkey_updates(troop_id, created_at desc);
 create index monkey_updates_current on public.monkey_updates(troop_id, expires_at desc);
+
+create or replace function public.stamp_monkey_update()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  new.updated_at := statement_timestamp();
+  return new;
+end;
+$$;
+
+create trigger stamp_monkey_update_before_insert
+  before insert on public.monkey_updates
+  for each row execute procedure public.stamp_monkey_update();
 
 create or replace function public.handle_new_user()
 returns trigger

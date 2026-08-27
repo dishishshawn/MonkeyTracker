@@ -8,6 +8,17 @@ import { PrivacyModal } from './src/components/PrivacyModal';
 import { enforceLocationPreference } from './src/domain/updates';
 import { HistoryScreen } from './src/screens/HistoryScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
+import { CloudAccessScreen } from './src/screens/CloudAccessScreen';
+import {
+  deleteRemoteUpdate,
+  loadCurrentRemoteUpdates,
+  loadRemoteTimeline,
+  publishRemoteUpdate,
+  subscribeToTroopUpdates,
+  unsubscribe,
+} from './src/services/backend';
+import { remoteCurrent, remoteTimeline } from './src/services/remoteMapping';
+import { useCloudAccount } from './src/state/useCloudAccount';
 import { useMonkeyTracker } from './src/state/useMonkeyTracker';
 import { colors } from './src/theme';
 import { MonkeyUpdate } from './src/types';
@@ -40,6 +51,36 @@ function AppContent() {
   }, [notify]);
 
   const { state, hydrated, expired, actions } = useMonkeyTracker(handleExpired);
+  const cloud = useCloudAccount();
+
+  useEffect(() => {
+    if (!cloud.ready || !cloud.profile) return;
+    if (state.profile.name === cloud.profile.display_name && state.profile.accent === cloud.profile.avatar_accent && state.paired) return;
+    actions.completePairing({ name: cloud.profile.display_name, accent: cloud.profile.avatar_accent }, true);
+  }, [actions, cloud.profile, cloud.ready, state.paired, state.profile]);
+
+  useEffect(() => {
+    const troopId = cloud.troop?.troopId;
+    if (!cloud.ready || !troopId) return;
+    let active = true;
+    const sync = async () => {
+      try {
+        const [currentRows, timelineRows] = await Promise.all([
+          loadCurrentRemoteUpdates(troopId),
+          loadRemoteTimeline(troopId),
+        ]);
+        if (active) actions.syncRemote(remoteCurrent(currentRows), remoteTimeline(timelineRows));
+      } catch {
+        if (active) notify('Cloud sync paused. Local data is still available.', 3500);
+      }
+    };
+    void sync();
+    const channel = subscribeToTroopUpdates(troopId, () => { void sync(); });
+    return () => {
+      active = false;
+      void unsubscribe(channel);
+    };
+  }, [actions, cloud.ready, cloud.troop?.troopId, notify]);
 
   const openComposer = useCallback(() => {
     setDraft(enforceLocationPreference(state.currentUpdate, state.preferences.locationEnabled));
@@ -51,14 +92,37 @@ function AppContent() {
     if (Platform.OS === 'web' && 'Notification' in globalThis && globalThis.Notification.permission === 'default') {
       void globalThis.Notification.requestPermission();
     }
-    actions.publish(draft);
+    const published = actions.publish(draft);
+    if (cloud.ready && cloud.troop) {
+      void publishRemoteUpdate(cloud.troop.troopId, published).catch(() => notify('Saved locally, but cloud sync needs another try.', 3500));
+    }
     setComposerOpen(false);
     notify('Monkey update published and saved to your timeline.');
-  }, [actions, draft, notify]);
+  }, [actions, cloud.ready, cloud.troop, draft, notify]);
 
   if (!hydrated) return <LoadingScreen />;
 
-  if (!state.paired) {
+  if (cloud.configured && !cloud.ready) {
+    return (
+      <CloudAccessScreen
+        error={cloud.error}
+        loading={cloud.loading}
+        onAcceptInvite={cloud.acceptInvite}
+        onCreateInvite={cloud.createInvite}
+        onRefresh={cloud.refresh}
+        onSignIn={cloud.signIn}
+        onSignOut={cloud.signOut}
+        onSignUp={cloud.signUp}
+        profile={cloud.profile}
+        signedIn={Boolean(cloud.session)}
+        troop={cloud.troop}
+      />
+    );
+  }
+
+  if (cloud.ready && !state.paired) return <LoadingScreen />;
+
+  if (!cloud.configured && !state.paired) {
     return (
       <>
         <PairingSetup onComplete={(profile, consentAccepted) => {
@@ -92,7 +156,11 @@ function AppContent() {
         <HistoryScreen
           onDelete={(id) => {
             actions.deleteTimelineEntry(id);
-            notify('Update deleted from this device.');
+            if (cloud.ready) {
+              void deleteRemoteUpdate(id).catch(() => notify('Removed locally; cloud deletion needs another try.', 3500));
+            } else {
+              notify('Update deleted from this device.');
+            }
           }}
           onHome={() => setActiveScreen('home')}
           onOpenComposer={openComposer}
@@ -117,7 +185,13 @@ function AppContent() {
           setPrivacyOpen(false);
           setActiveScreen('home');
           setReaction(null);
-          actions.leaveTroop();
+          if (cloud.ready) {
+            void cloud.leave().then((succeeded) => {
+              if (succeeded) actions.leaveTroop();
+            });
+          } else {
+            actions.leaveTroop();
+          }
         }}
         onLocationChange={actions.setLocationEnabled}
         onNotificationsChange={actions.setNotificationsPrivate}

@@ -135,6 +135,11 @@ export async function loadCurrentRemoteUpdates(troopId: string): Promise<RemoteU
   return (data ?? []) as RemoteUpdate[];
 }
 
+export async function deleteRemoteUpdate(updateId: string): Promise<void> {
+  const { error } = await requireSupabase().from('monkey_updates').delete().eq('id', updateId);
+  if (error) throw error;
+}
+
 export function subscribeToTroopUpdates(troopId: string, onChange: () => void): RealtimeChannel {
   return requireSupabase()
     .channel(`troop-updates:${troopId}`)

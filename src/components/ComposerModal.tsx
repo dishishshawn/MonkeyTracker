@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Slider from '@react-native-community/slider';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { activities, availabilities, expirationOptions, locationLevels, moods, poses, scenes } from '../domain/updates';
+import { activities, availabilities, expirationOptionsFor, locationLevels, moods, poses, scenes } from '../domain/updates';
 import { colors } from '../theme';
 import { Activity, Availability, LocationLevel, MonkeyUpdate, Mood, Pose, Scene } from '../types';
 import { sceneColors } from '../ui/scenes';
@@ -21,7 +21,8 @@ interface ComposerProps {
 export function ComposerModal({ draft, locationEnabled, open, onChange, onClose, onPublish }: ComposerProps) {
   const [extrasOpen, setExtrasOpen] = useState(false);
   const set = <K extends keyof MonkeyUpdate>(key: K, value: MonkeyUpdate[K]) => onChange({ ...draft, [key]: value });
-  const expirationIndex = Math.max(0, expirationOptions.findIndex((item) => item.label === draft.expiration));
+  const availableExpirations = expirationOptionsFor(draft.locationLevel);
+  const expirationIndex = Math.max(0, availableExpirations.findIndex((item) => item.label === draft.expiration));
 
   return (
     <Modal animationType="slide" presentationStyle="pageSheet" visible={open} onRequestClose={onClose}>
@@ -43,7 +44,10 @@ export function ComposerModal({ draft, locationEnabled, open, onChange, onClose,
             <Picker label="Can they reach you?" items={availabilities} value={draft.availability} onChange={(value) => set('availability', value as Availability)} />
             <Text style={styles.fieldLabel}>Add context (optional)</Text>
             <TextInput accessibilityLabel="Update caption" maxLength={140} multiline onChangeText={(text) => set('caption', text)} placeholder="Narrate the monkey business…" placeholderTextColor={colors.muted} style={styles.input} value={draft.caption} />
-            <Picker label="Location precision" items={locationEnabled ? locationLevels : ['Hidden']} value={draft.locationLevel} onChange={(value) => set('locationLevel', value as LocationLevel)} />
+            <Picker label="Location precision" items={locationEnabled ? locationLevels : ['Hidden']} value={draft.locationLevel} onChange={(value) => {
+              const locationLevel = value as LocationLevel;
+              onChange({ ...draft, locationLevel, ...(locationLevel === 'Trail' && !['15 min', '30 min', '1 hour'].includes(draft.expiration) ? { expiration: '1 hour' as const } : {}) });
+            }} />
             {!locationEnabled && <View style={styles.warning}><Text style={styles.warningText}>Global location sharing is off. You can still share activity, mood, and availability.</Text></View>}
             {draft.locationLevel !== 'Hidden' && <TextInput accessibilityLabel="Place name" onChangeText={(text) => set('place', text)} placeholder="Name this place" placeholderTextColor={colors.muted} style={styles.singleInput} value={draft.place} />}
             {draft.locationLevel === 'Trail' && <View style={styles.warning}><Text style={styles.warningText}>Trail shares precise live location and ends automatically. You can stop it at any time.</Text></View>}
@@ -59,8 +63,8 @@ export function ComposerModal({ draft, locationEnabled, open, onChange, onClose,
             )}
             <View style={styles.expirationCard}>
               <View style={styles.expirationHeading}><Text style={styles.fieldLabel}>Status expires</Text><Text style={styles.expirationValue}>{draft.expiration}</Text></View>
-              <Slider accessibilityLabel={`Status expires in ${draft.expiration}`} minimumValue={0} maximumValue={expirationOptions.length - 1} minimumTrackTintColor={colors.mossDark} maximumTrackTintColor={colors.line} step={1} thumbTintColor={colors.mossDark} value={expirationIndex} onValueChange={(value) => set('expiration', expirationOptions[Math.round(value)]?.label ?? '2 hours')} />
-              <View style={styles.expirationScale}><Text style={styles.expirationEnd}>15m</Text><Text style={styles.expirationEnd}>End of day</Text></View>
+              <Slider accessibilityLabel={`Status expires in ${draft.expiration}`} minimumValue={0} maximumValue={availableExpirations.length - 1} minimumTrackTintColor={colors.mossDark} maximumTrackTintColor={colors.line} step={1} thumbTintColor={colors.mossDark} value={expirationIndex} onValueChange={(value) => set('expiration', availableExpirations[Math.round(value)]?.label ?? '1 hour')} />
+              <View style={styles.expirationScale}><Text style={styles.expirationEnd}>15m</Text><Text style={styles.expirationEnd}>{draft.locationLevel === 'Trail' ? '1 hour max' : 'End of day'}</Text></View>
               <Text style={styles.expirationNote}>We’ll notify you when it expires, then show your status as unknown.</Text>
             </View>
             <Pressable accessibilityRole="button" onPress={onPublish} style={styles.publishButton}><Text style={styles.publishText}>Publish monkey update</Text></Pressable>
