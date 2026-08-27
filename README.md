@@ -17,11 +17,11 @@ Release 0 mobile prototype for the private presence-sharing app described in [`P
 - Real 30-day Monkey Business timeline with save and delete controls
 - Optional Supabase account, one-couple pairing, realtime sync, and RLS backend
 
-The default simulator stores prototype data locally on the device. A Supabase
-private-alpha foundation is checked in but remains disabled until a development
-project is configured; see [`docs/BACKEND.md`](./docs/BACKEND.md).
-When public Supabase configuration is present, the real account and invite flow
-automatically replaces the local pairing simulator.
+The simulator stores prototype data locally when Supabase values are absent.
+This development workspace is connected to a hosted Supabase project, so its
+ignored `.env` activates the real account, invite, and realtime flow. Fresh
+clones remain local-first until configured; see
+[`docs/BACKEND.md`](./docs/BACKEND.md).
 
 ## AI handoff
 
