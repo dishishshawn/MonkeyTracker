@@ -16,7 +16,7 @@ export function createInitialAppState(now = new Date()): PersistedAppState {
   return {
     version: 1,
     paired: false,
-    profile: { name: 'You', accent: '#996744' },
+    profile: { name: 'You', accent: '#996744', skin: '#EBC6A6' },
     currentUpdate: createInitialUpdate(now),
     timeline: [],
     preferences: {

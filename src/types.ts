@@ -22,6 +22,7 @@ export interface MonkeyUpdate {
 export interface Profile {
   name: string;
   accent: string;
+  skin: string;
 }
 
 export interface TimelineEntry {

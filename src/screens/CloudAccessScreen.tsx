@@ -5,7 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { ActiveTroop, RemoteProfile } from '../services/backend';
 import { colors } from '../theme';
 import { MonkeyAvatar } from '../components/MonkeyAvatar';
-import { MonkeyColorPicker } from '../components/MonkeyColorPicker';
+import { MonkeyAppearancePicker } from '../components/MonkeyAppearancePicker';
 
 interface CloudAccessScreenProps {
   signedIn: boolean;
@@ -14,7 +14,7 @@ interface CloudAccessScreenProps {
   profile: RemoteProfile | null;
   troop: ActiveTroop | null;
   onSignIn: (email: string, password: string) => Promise<boolean>;
-  onSignUp: (email: string, password: string, displayName: string, accent: string) => Promise<boolean>;
+  onSignUp: (email: string, password: string, displayName: string, accent: string, skin: string) => Promise<boolean>;
   onSignOut: () => Promise<boolean>;
   onCreateInvite: () => Promise<string>;
   onAcceptInvite: (code: string) => Promise<boolean>;
@@ -31,13 +31,14 @@ function CloudAuth({ loading, error, onSignIn, onSignUp }: CloudAccessScreenProp
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [accent, setAccent] = useState('#996744');
+  const [skin, setSkin] = useState('#EBC6A6');
   const [message, setMessage] = useState<string | null>(null);
   const valid = email.includes('@') && password.length >= 8 && (mode === 'signin' || displayName.trim().length > 0);
 
   const submit = async () => {
     const succeeded = mode === 'signin'
       ? await onSignIn(email, password)
-      : await onSignUp(email, password, displayName, accent);
+      : await onSignUp(email, password, displayName, accent, skin);
     if (succeeded && mode === 'signup') setMessage('Account created. If email confirmation is enabled, confirm it before signing in.');
   };
 
@@ -48,9 +49,9 @@ function CloudAuth({ loading, error, onSignIn, onSignUp }: CloudAccessScreenProp
         <Text style={styles.kicker}>PRIVATE ALPHA</Text>
         <Text style={styles.title}>{mode === 'signup' ? 'Create your treehouse.' : 'Welcome back, monkey.'}</Text>
         <Text style={styles.body}>Your account keeps one private troop synchronized across devices.</Text>
-        {mode === 'signup' && <View style={styles.monkey}><MonkeyAvatar activity="Chilling" accent={accent} /></View>}
+        {mode === 'signup' && <View style={styles.monkey}><MonkeyAvatar activity="Chilling" accent={accent} skin={skin} /></View>}
         {mode === 'signup' && <TextInput accessibilityLabel="Display name" autoCapitalize="words" maxLength={30} onChangeText={setDisplayName} placeholder="Display name" placeholderTextColor={colors.muted} style={styles.input} value={displayName} />}
-        {mode === 'signup' && <View style={styles.accents}><MonkeyColorPicker compact onChange={setAccent} value={accent} /></View>}
+        {mode === 'signup' && <View style={styles.accents}><MonkeyAppearancePicker compact fur={accent} onFurChange={setAccent} onSkinChange={setSkin} skin={skin} /></View>}
         <TextInput accessibilityLabel="Email" autoCapitalize="none" autoComplete="email" keyboardType="email-address" onChangeText={setEmail} placeholder="Email" placeholderTextColor={colors.muted} style={styles.input} value={email} />
         <TextInput accessibilityLabel="Password" autoCapitalize="none" onChangeText={setPassword} placeholder="Password (8+ characters)" placeholderTextColor={colors.muted} secureTextEntry style={styles.input} value={password} />
         {(error || message) && <View style={error ? styles.errorCard : styles.infoCard}><Text style={error ? styles.errorText : styles.infoText}>{error ?? message}</Text></View>}

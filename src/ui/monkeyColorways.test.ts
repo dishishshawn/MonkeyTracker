@@ -1,17 +1,28 @@
 import { describe, expect, it } from 'vitest';
-import { BLUE_PINK_COLORWAY, monkeyColorwayFor } from './monkeyColorways';
+import {
+  BLUE_MONKEY_FUR,
+  defaultSkinForAccent,
+  LEGACY_BLUE_PINK_COLORWAY,
+  monkeyFurFor,
+  monkeySkinFor,
+  PINK_MONKEY_FUR,
+  PINK_MONKEY_SKIN,
+} from './monkeyColorways';
 
-describe('monkey colorways', () => {
-  it('resolves the blue and pink palette', () => {
-    expect(monkeyColorwayFor(BLUE_PINK_COLORWAY)).toMatchObject({
-      label: 'Blueberry blush',
-      fur: '#77B9E8',
-      innerEar: '#F49ABB',
-      face: '#FFD9E8',
-    });
+describe('monkey appearance colors', () => {
+  it('offers blue and pink as separate fur colors', () => {
+    expect(monkeyFurFor(BLUE_MONKEY_FUR).label).toBe('Blueberry');
+    expect(monkeyFurFor(PINK_MONKEY_FUR).label).toBe('Bubblegum');
+    expect(monkeySkinFor(PINK_MONKEY_SKIN).label).toBe('Rosy');
   });
 
-  it('keeps legacy custom accent values usable', () => {
-    expect(monkeyColorwayFor('#123456')).toMatchObject({ id: '#123456', fur: '#123456', label: 'Custom' });
+  it('preserves the brief combined blue-and-pink colorway', () => {
+    expect(monkeyFurFor(LEGACY_BLUE_PINK_COLORWAY).id).toBe(BLUE_MONKEY_FUR);
+    expect(defaultSkinForAccent(LEGACY_BLUE_PINK_COLORWAY)).toBe(PINK_MONKEY_SKIN);
+  });
+
+  it('keeps custom colors usable', () => {
+    expect(monkeyFurFor('#123456')).toMatchObject({ id: '#123456', label: 'Custom' });
+    expect(monkeySkinFor('#654321')).toMatchObject({ id: '#654321', label: 'Custom' });
   });
 });

@@ -55,8 +55,8 @@ function AppContent() {
 
   useEffect(() => {
     if (!cloud.ready || !cloud.profile) return;
-    if (state.profile.name === cloud.profile.display_name && state.profile.accent === cloud.profile.avatar_accent && state.paired) return;
-    actions.completePairing({ name: cloud.profile.display_name, accent: cloud.profile.avatar_accent }, true);
+    if (state.profile.name === cloud.profile.display_name && state.profile.accent === cloud.profile.avatar_accent && state.profile.skin === cloud.profile.avatar_skin && state.paired) return;
+    actions.completePairing({ name: cloud.profile.display_name, accent: cloud.profile.avatar_accent, skin: cloud.profile.avatar_skin }, true);
   }, [actions, cloud.profile, cloud.ready, state.paired, state.profile]);
 
   useEffect(() => {
@@ -171,6 +171,7 @@ function AppContent() {
 
       <ComposerModal
         accent={state.profile.accent}
+        skin={state.profile.skin}
         draft={draft ?? state.currentUpdate}
         locationEnabled={state.preferences.locationEnabled}
         onChange={setDraft}

@@ -6,12 +6,13 @@ import { canAcceptInvite, PROTOTYPE_INVITE_CODE } from '../domain/pairing';
 import { colors } from '../theme';
 import { Profile } from '../types';
 import { MonkeyAvatar } from './MonkeyAvatar';
-import { MonkeyColorPicker } from './MonkeyColorPicker';
+import { MonkeyAppearancePicker } from './MonkeyAppearancePicker';
 
 export function PairingSetup({ onComplete }: { onComplete: (profile: Profile, consentAccepted: boolean) => void }) {
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
   const [accent, setAccent] = useState('#996744');
+  const [skin, setSkin] = useState('#EBC6A6');
   const [code, setCode] = useState('');
   const accepted = canAcceptInvite(code);
 
@@ -27,11 +28,11 @@ export function PairingSetup({ onComplete }: { onComplete: (profile: Profile, co
             <Text style={styles.kicker}>WELCOME TO THE TROOP</Text>
             <Text style={styles.title}>First, meet your monkey.</Text>
             <Text style={styles.body}>This tiny creature will report your whereabouts with questionable dignity.</Text>
-            <View style={styles.monkey}><MonkeyAvatar activity="Chilling" accent={accent} /></View>
+            <View style={styles.monkey}><MonkeyAvatar activity="Chilling" accent={accent} skin={skin} /></View>
             <Text style={styles.fieldLabel}>What should your partner call you?</Text>
             <TextInput accessibilityLabel="Your display name" autoCapitalize="words" maxLength={30} onChangeText={setName} placeholder="Display name" placeholderTextColor={colors.muted} style={styles.input} value={name} />
-            <Text style={styles.fieldLabel}>Choose your colorway</Text>
-            <View style={styles.accentRow}><MonkeyColorPicker onChange={setAccent} value={accent} /></View>
+            <Text style={styles.fieldLabel}>Choose your monkey</Text>
+            <View style={styles.accentRow}><MonkeyAppearancePicker fur={accent} onFurChange={setAccent} onSkinChange={setSkin} skin={skin} /></View>
             <Pressable accessibilityRole="button" accessibilityState={{ disabled: !name.trim() }} disabled={!name.trim()} onPress={() => setStep(1)} style={[styles.primaryButton, !name.trim() && styles.disabled]}>
               <Text style={styles.primaryText}>That’s my monkey</Text>
             </Pressable>
@@ -57,12 +58,12 @@ export function PairingSetup({ onComplete }: { onComplete: (profile: Profile, co
             <Text style={styles.title}>Enter the code together.</Text>
             <Text style={styles.body}>For this local prototype, type {PROTOTYPE_INVITE_CODE} to record explicit partner acceptance.</Text>
             <View style={styles.pairScene}>
-              <MonkeyAvatar activity="Chilling" accent={accent} />
+              <MonkeyAvatar activity="Chilling" accent={accent} skin={skin} />
               <Text style={styles.pairPlus}>＋</Text>
               <MonkeyAvatar activity="Studying" accent="#7C5540" />
             </View>
             <TextInput accessibilityLabel="Six character invite code" autoCapitalize="characters" autoCorrect={false} keyboardType="number-pad" maxLength={6} onChangeText={setCode} placeholder="SIX-DIGIT CODE" placeholderTextColor={colors.muted} style={[styles.input, styles.codeInput]} value={code} />
-            <Pressable accessibilityRole="button" accessibilityState={{ disabled: !accepted }} disabled={!accepted} onPress={() => onComplete({ name: name.trim(), accent }, true)} style={[styles.primaryButton, !accepted && styles.disabled]}>
+            <Pressable accessibilityRole="button" accessibilityState={{ disabled: !accepted }} disabled={!accepted} onPress={() => onComplete({ name: name.trim(), accent, skin }, true)} style={[styles.primaryButton, !accepted && styles.disabled]}>
               <Text style={styles.primaryText}>Accept and enter the treehouse</Text>
             </Pressable>
             <Pressable onPress={() => setStep(1)} style={styles.secondaryButton}><Text style={styles.secondaryText}>Back</Text></Pressable>

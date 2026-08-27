@@ -17,8 +17,9 @@ Implemented:
 - Three-step first-run flow: monkey customization, private invite, and explicit
   partner acceptance.
 - Shared home stage with two expressive monkey avatars.
-- Five selectable monkey colorways, including a blue-fur and pink-blush
-  `Blueberry blush` palette shared by local setup, cloud signup, and previews.
+- Independent monkey appearance controls with six fur colors (including
+  Blueberry blue and Bubblegum pink) and five face tones, shared by local
+  setup, cloud signup, home, and update previews.
 - Partner status card with freshness and location-precision labels.
 - Update composer for activity, mood, availability, caption, location sharing,
   scene, pose, and expiration.
@@ -40,6 +41,8 @@ Implemented:
 - A dedicated free Supabase development project (`gexgntxhrgywdqmaxrkf`) with
   the migration, Auth redirects, eight-character password minimum, no-confirm
   alpha signup, and Realtime publication deployed.
+- An additive `avatar_skin` migration with defaults for existing profiles and
+  compatibility for the brief combined `blue-pink` appearance value.
 - A cleanup-safe hosted RLS verification script for paired, unrelated, and
   former-member access boundaries.
 
@@ -60,7 +63,7 @@ notifications and real location services are not built.
 
 ## Validation baseline
 
-At this checkpoint, TypeScript validation, thirteen tests, and production exports
+At this checkpoint, TypeScript validation, fourteen tests, and production exports
 for web and Android pass with the hosted public configuration. Auth health and
 an unauthenticated RLS read were also checked against the live project. Run the
 common local check with:
@@ -81,7 +84,7 @@ For device behavior on this Linux workspace:
 npm run emulator
 ```
 
-Vitest covers thirteen domain/reducer/mapping/colorway cases across expiration
+Vitest covers fourteen domain/reducer/mapping/appearance cases across expiration
 boundaries, end-of-day behavior, retention, location privacy, explicit pairing
 consent, and avatar palette fallback. `npm run backend:verify-hosted` covers live
 pair acceptance, partner update visibility, outsider isolation, and post-unpair
