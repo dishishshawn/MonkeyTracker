@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { ActiveTroop, RemoteProfile } from '../services/backend';
 import { colors } from '../theme';
 import { MonkeyAvatar } from '../components/MonkeyAvatar';
+import { MonkeyColorPicker } from '../components/MonkeyColorPicker';
 
 interface CloudAccessScreenProps {
   signedIn: boolean;
@@ -49,7 +50,7 @@ function CloudAuth({ loading, error, onSignIn, onSignUp }: CloudAccessScreenProp
         <Text style={styles.body}>Your account keeps one private troop synchronized across devices.</Text>
         {mode === 'signup' && <View style={styles.monkey}><MonkeyAvatar activity="Chilling" accent={accent} /></View>}
         {mode === 'signup' && <TextInput accessibilityLabel="Display name" autoCapitalize="words" maxLength={30} onChangeText={setDisplayName} placeholder="Display name" placeholderTextColor={colors.muted} style={styles.input} value={displayName} />}
-        {mode === 'signup' && <View style={styles.accents}>{['#996744', '#7C5540', '#C07A62', '#5F7562'].map((color) => <Pressable accessibilityLabel={`Choose monkey color ${color}`} key={color} onPress={() => setAccent(color)} style={[styles.accent, { backgroundColor: color }, accent === color && styles.accentSelected]} />)}</View>}
+        {mode === 'signup' && <View style={styles.accents}><MonkeyColorPicker compact onChange={setAccent} value={accent} /></View>}
         <TextInput accessibilityLabel="Email" autoCapitalize="none" autoComplete="email" keyboardType="email-address" onChangeText={setEmail} placeholder="Email" placeholderTextColor={colors.muted} style={styles.input} value={email} />
         <TextInput accessibilityLabel="Password" autoCapitalize="none" onChangeText={setPassword} placeholder="Password (8+ characters)" placeholderTextColor={colors.muted} secureTextEntry style={styles.input} value={password} />
         {(error || message) && <View style={error ? styles.errorCard : styles.infoCard}><Text style={error ? styles.errorText : styles.infoText}>{error ?? message}</Text></View>}
@@ -88,7 +89,7 @@ function CloudPairing({ loading, error, profile, troop, onSignOut, onCreateInvit
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.paper }, authPage: { flexGrow: 1, padding: 25, paddingTop: 48, paddingBottom: 40 }, pairingPage: { flexGrow: 1, padding: 25, paddingTop: 58, paddingBottom: 40 },
   kicker: { color: colors.moss, fontSize: 10, letterSpacing: 2, fontWeight: '900', textAlign: 'center' }, title: { color: colors.ink, fontSize: 30, lineHeight: 36, letterSpacing: -1, fontWeight: '900', textAlign: 'center', marginTop: 10 }, body: { color: colors.muted, fontSize: 14, lineHeight: 21, textAlign: 'center', marginTop: 9, marginBottom: 26 },
-  monkey: { height: 150, borderRadius: 26, backgroundColor: colors.lime, alignItems: 'center', justifyContent: 'center', marginBottom: 22 }, input: { borderWidth: 1, borderColor: colors.line, borderRadius: 15, backgroundColor: colors.card, padding: 15, color: colors.ink, fontSize: 16, marginBottom: 14 }, accents: { flexDirection: 'row', justifyContent: 'center', gap: 14, marginBottom: 22 }, accent: { width: 38, height: 38, borderRadius: 19, borderWidth: 3, borderColor: colors.paper }, accentSelected: { borderColor: colors.ink },
+  monkey: { height: 150, borderRadius: 26, backgroundColor: colors.lime, alignItems: 'center', justifyContent: 'center', marginBottom: 22 }, input: { borderWidth: 1, borderColor: colors.line, borderRadius: 15, backgroundColor: colors.card, padding: 15, color: colors.ink, fontSize: 16, marginBottom: 14 }, accents: { marginBottom: 20 },
   primary: { backgroundColor: colors.mossDark, borderRadius: 16, alignItems: 'center', justifyContent: 'center', minHeight: 52, padding: 15, marginTop: 5 }, primaryText: { color: colors.white, fontSize: 15, fontWeight: '800' }, disabled: { opacity: 0.35 }, secondary: { alignItems: 'center', padding: 16 }, secondaryText: { color: colors.muted, fontSize: 12, fontWeight: '800' },
   errorCard: { backgroundColor: '#FBE1DC', borderRadius: 12, padding: 11, marginBottom: 10 }, errorText: { color: colors.danger, fontSize: 11, lineHeight: 16, fontWeight: '700' }, infoCard: { backgroundColor: colors.lime, borderRadius: 12, padding: 11, marginBottom: 10 }, infoText: { color: colors.mossDark, fontSize: 11, lineHeight: 16, fontWeight: '700' },
   inviteCard: { backgroundColor: colors.lime, borderRadius: 24, padding: 28, alignItems: 'center', marginVertical: 14 }, inviteLabel: { color: colors.mossDark, fontSize: 9, letterSpacing: 1.7, fontWeight: '900' }, inviteCode: { color: colors.ink, fontSize: 35, letterSpacing: 6, fontWeight: '900', marginVertical: 15 }, inlineAction: { color: colors.mossDark, fontSize: 11, fontWeight: '900' },

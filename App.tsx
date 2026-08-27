@@ -170,6 +170,7 @@ function AppContent() {
       )}
 
       <ComposerModal
+        accent={state.profile.accent}
         draft={draft ?? state.currentUpdate}
         locationEnabled={state.preferences.locationEnabled}
         onChange={setDraft}

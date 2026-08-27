@@ -6,13 +6,13 @@ import { canAcceptInvite, PROTOTYPE_INVITE_CODE } from '../domain/pairing';
 import { colors } from '../theme';
 import { Profile } from '../types';
 import { MonkeyAvatar } from './MonkeyAvatar';
+import { MonkeyColorPicker } from './MonkeyColorPicker';
 
 export function PairingSetup({ onComplete }: { onComplete: (profile: Profile, consentAccepted: boolean) => void }) {
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
   const [accent, setAccent] = useState('#996744');
   const [code, setCode] = useState('');
-  const accents = ['#996744', '#7C5540', '#C07A62', '#5F7562'];
   const accepted = canAcceptInvite(code);
 
   return (
@@ -30,12 +30,8 @@ export function PairingSetup({ onComplete }: { onComplete: (profile: Profile, co
             <View style={styles.monkey}><MonkeyAvatar activity="Chilling" accent={accent} /></View>
             <Text style={styles.fieldLabel}>What should your partner call you?</Text>
             <TextInput accessibilityLabel="Your display name" autoCapitalize="words" maxLength={30} onChangeText={setName} placeholder="Display name" placeholderTextColor={colors.muted} style={styles.input} value={name} />
-            <Text style={styles.fieldLabel}>Choose your fur</Text>
-            <View style={styles.accentRow}>
-              {accents.map((color) => (
-                <Pressable accessibilityLabel={`Choose monkey color ${color}`} accessibilityRole="button" accessibilityState={{ selected: accent === color }} key={color} onPress={() => setAccent(color)} style={[styles.accentChoice, { backgroundColor: color }, accent === color && styles.accentSelected]} />
-              ))}
-            </View>
+            <Text style={styles.fieldLabel}>Choose your colorway</Text>
+            <View style={styles.accentRow}><MonkeyColorPicker onChange={setAccent} value={accent} /></View>
             <Pressable accessibilityRole="button" accessibilityState={{ disabled: !name.trim() }} disabled={!name.trim()} onPress={() => setStep(1)} style={[styles.primaryButton, !name.trim() && styles.disabled]}>
               <Text style={styles.primaryText}>That’s my monkey</Text>
             </Pressable>
@@ -90,9 +86,7 @@ const styles = StyleSheet.create({
   monkey: { height: 178, borderRadius: 28, backgroundColor: colors.lime, alignItems: 'center', justifyContent: 'center', marginBottom: 28 },
   fieldLabel: { color: colors.ink, fontSize: 14, fontWeight: '800', marginBottom: 10 },
   input: { borderWidth: 1, borderColor: colors.line, borderRadius: 15, backgroundColor: colors.card, padding: 15, color: colors.ink, fontSize: 16, marginBottom: 23 },
-  accentRow: { flexDirection: 'row', gap: 14, marginBottom: 34 },
-  accentChoice: { width: 42, height: 42, borderRadius: 21, borderWidth: 3, borderColor: colors.paper },
-  accentSelected: { borderColor: colors.ink, transform: [{ scale: 1.08 }] },
+  accentRow: { marginBottom: 30 },
   primaryButton: { backgroundColor: colors.mossDark, borderRadius: 16, alignItems: 'center', padding: 16, marginTop: 'auto' },
   primaryText: { color: colors.white, fontSize: 15, fontWeight: '800' },
   disabled: { opacity: 0.35 },

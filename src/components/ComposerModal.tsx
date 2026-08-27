@@ -10,6 +10,7 @@ import { Chip } from './Chip';
 import { MonkeyAvatar } from './MonkeyAvatar';
 
 interface ComposerProps {
+  accent: string;
   draft: MonkeyUpdate;
   locationEnabled: boolean;
   open: boolean;
@@ -18,7 +19,7 @@ interface ComposerProps {
   onPublish: () => void;
 }
 
-export function ComposerModal({ draft, locationEnabled, open, onChange, onClose, onPublish }: ComposerProps) {
+export function ComposerModal({ accent, draft, locationEnabled, open, onChange, onClose, onPublish }: ComposerProps) {
   const [extrasOpen, setExtrasOpen] = useState(false);
   const set = <K extends keyof MonkeyUpdate>(key: K, value: MonkeyUpdate[K]) => onChange({ ...draft, [key]: value });
   const availableExpirations = expirationOptionsFor(draft.locationLevel);
@@ -35,7 +36,7 @@ export function ComposerModal({ draft, locationEnabled, open, onChange, onClose,
           </View>
           <ScrollView contentContainerStyle={styles.composer} keyboardShouldPersistTaps="handled">
             <View style={[styles.preview, { backgroundColor: sceneColors[draft.scene] }]}>
-              <MonkeyAvatar activity={draft.activity} accent="#996744" pose={draft.pose} />
+              <MonkeyAvatar activity={draft.activity} accent={accent} pose={draft.pose} />
               <Text style={styles.previewText}>{draft.activity} · feeling {draft.mood.toLowerCase()}</Text>
               <Text style={styles.previewDetail}>{draft.scene} · {draft.pose}</Text>
             </View>
