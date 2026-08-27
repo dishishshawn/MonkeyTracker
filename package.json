@@ -13,6 +13,7 @@
     "doctor": "expo-doctor",
     "backend:lint": "supabase db lint",
     "backend:push": "supabase db push",
+    "backend:verify-hosted": "node --env-file-if-exists=.env scripts/verify-hosted.mjs",
     "test": "vitest run",
     "verify": "bash scripts/check.sh"
   },

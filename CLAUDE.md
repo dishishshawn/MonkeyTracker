@@ -60,6 +60,7 @@ npm run verify       # TypeScript, domain tests, Expo dependency compatibility
 npm test             # Fast privacy, consent, retention, and expiration tests
 npm run backend:lint # Lint a linked/running Supabase database
 npm run backend:push # Apply pending migrations to the linked Supabase project
+npm run backend:verify-hosted # Destructive temporary-user RLS check; see docs/BACKEND.md
 npm run web          # Lightweight browser preview
 npm run emulator     # Android emulator plus Expo Go on Linux
 npm start            # Metro for a physical device or simulator
