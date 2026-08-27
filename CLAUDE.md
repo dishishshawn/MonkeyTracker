@@ -22,8 +22,13 @@ current implementation snapshot and next work.
 ## Stack and structure
 
 - Expo SDK 57, React Native 0.86, React 19, TypeScript in strict mode.
-- `App.tsx` currently owns navigation and prototype state. Avoid making it
-  larger when a focused screen, hook, service, or component is appropriate.
+- `App.tsx` coordinates screens, modals, notifications, and the app state hook.
+- `src/state/` owns the reducer and persistence-facing hook.
+- `src/domain/` contains pure privacy, pairing, expiration, and retention rules.
+- `src/storage/` owns local AsyncStorage persistence.
+- `src/services/` is the optional Supabase boundary; local mode must keep
+  working when public Supabase environment values are absent.
+- `src/screens/` and `src/components/` own presentation.
 - `src/types.ts` contains shared domain types.
 - `src/theme.ts` contains design tokens.
 - `src/components/` contains reusable UI primitives.
@@ -51,7 +56,8 @@ export PATH="$PWD/.tools/node/bin:$PATH"
 Useful commands:
 
 ```sh
-npm run verify       # TypeScript and Expo dependency compatibility
+npm run verify       # TypeScript, domain tests, Expo dependency compatibility
+npm test             # Fast privacy, consent, retention, and expiration tests
 npm run web          # Lightweight browser preview
 npm run emulator     # Android emulator plus Expo Go on Linux
 npm start            # Metro for a physical device or simulator
@@ -69,5 +75,5 @@ npm start            # Metro for a physical device or simulator
 6. Never commit secrets, credentials, generated exports, `.tools/`, or local
    environment files.
 
-There is no automated test suite yet. Do not describe typechecking or a manual
-preview as full test coverage.
+The domain test suite does not replace component, end-to-end, RLS, notification,
+or device testing. State exactly which layers were exercised.

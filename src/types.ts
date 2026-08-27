@@ -16,7 +16,33 @@ export interface MonkeyUpdate {
   expiration: Expiration;
   scene: Scene;
   pose: Pose;
-  updatedAt: Date;
+  updatedAt: string;
+}
+
+export interface Profile {
+  name: string;
+  accent: string;
+}
+
+export interface TimelineEntry {
+  id: string;
+  update: MonkeyUpdate;
+  createdAt: string;
+  saved: boolean;
+}
+
+export interface PrivacyPreferences {
+  locationEnabled: boolean;
+  notificationsPrivate: boolean;
+}
+
+export interface PersistedAppState {
+  version: 1;
+  paired: boolean;
+  profile: Profile;
+  currentUpdate: MonkeyUpdate;
+  timeline: TimelineEntry[];
+  preferences: PrivacyPreferences;
 }
 
 export interface Person {
