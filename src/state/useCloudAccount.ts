@@ -7,6 +7,7 @@ import {
   leaveTroop,
   loadActiveTroop,
   loadMyProfile,
+  loadPartnerProfile,
   RemoteProfile,
   signInWithEmail,
   signOut,
@@ -17,6 +18,7 @@ import { isSupabaseConfigured, supabase } from '../services/supabase';
 export function useCloudAccount() {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<RemoteProfile | null>(null);
+  const [partnerProfile, setPartnerProfile] = useState<RemoteProfile | null>(null);
   const [troop, setTroop] = useState<ActiveTroop | null>(null);
   const [loading, setLoading] = useState(isSupabaseConfigured);
   const [error, setError] = useState<string | null>(null);
@@ -30,12 +32,14 @@ export function useCloudAccount() {
       setSession(data.session);
       if (!data.session) {
         setProfile(null);
+        setPartnerProfile(null);
         setTroop(null);
         return;
       }
       const [nextProfile, nextTroop] = await Promise.all([loadMyProfile(), loadActiveTroop()]);
       setProfile(nextProfile);
       setTroop(nextTroop);
+      setPartnerProfile(nextTroop?.memberCount && nextTroop.memberCount >= 2 ? await loadPartnerProfile(nextTroop.troopId) : null);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Could not load the cloud account.');
     } finally {
@@ -51,6 +55,7 @@ export function useCloudAccount() {
       if (nextSession) void refresh();
       else {
         setProfile(null);
+        setPartnerProfile(null);
         setTroop(null);
         setLoading(false);
       }
@@ -77,6 +82,7 @@ export function useCloudAccount() {
     configured: isSupabaseConfigured,
     session,
     profile,
+    partnerProfile,
     troop,
     loading,
     error,
@@ -93,5 +99,5 @@ export function useCloudAccount() {
     },
     acceptInvite: (code: string) => run(async () => { await acceptTroopInvite(code); }),
     leave: () => troop ? run(() => leaveTroop(troop.troopId)) : Promise.resolve(true),
-  }), [error, loading, profile, refresh, run, session, troop]);
+  }), [error, loading, partnerProfile, profile, refresh, run, session, troop]);
 }

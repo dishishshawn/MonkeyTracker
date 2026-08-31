@@ -147,6 +147,7 @@ function AppContent() {
             setReaction(value);
             notify(`${value} sent. A dignified response.`);
           }}
+          partner={cloud.partnerProfile ? { name: cloud.partnerProfile.display_name, accent: cloud.partnerProfile.avatar_accent, skin: cloud.partnerProfile.avatar_skin } : undefined}
           profile={state.profile}
           reaction={reaction}
           timeline={state.timeline}
