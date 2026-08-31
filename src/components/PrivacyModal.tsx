@@ -6,13 +6,15 @@ interface PrivacyModalProps {
   open: boolean;
   locationEnabled: boolean;
   notificationsPrivate: boolean;
+  statusRemindersEnabled: boolean;
   onLocationChange: (value: boolean) => void;
   onNotificationsChange: (value: boolean) => void;
+  onStatusRemindersChange: (value: boolean) => void;
   onLeave: () => void;
   onClose: () => void;
 }
 
-export function PrivacyModal({ open, locationEnabled, notificationsPrivate, onLocationChange, onNotificationsChange, onLeave, onClose }: PrivacyModalProps) {
+export function PrivacyModal({ open, locationEnabled, notificationsPrivate, statusRemindersEnabled, onLocationChange, onNotificationsChange, onStatusRemindersChange, onLeave, onClose }: PrivacyModalProps) {
   return (
     <Modal animationType="slide" presentationStyle="pageSheet" visible={open} onRequestClose={onClose}>
       <SafeAreaView style={styles.safe}>
@@ -23,6 +25,8 @@ export function PrivacyModal({ open, locationEnabled, notificationsPrivate, onLo
             <SettingRow title="Location sharing" body={locationEnabled ? 'On — controlled per update' : 'Off everywhere'} value={locationEnabled} onChange={onLocationChange} />
             <View style={styles.divider} />
             <SettingRow title="Private notifications" body="Hide captions and places in previews" value={notificationsPrivate} onChange={onNotificationsChange} />
+            <View style={styles.divider} />
+            <SettingRow title="Expiration reminders" body="Tell me when my status or Trail is about to end" value={statusRemindersEnabled} onChange={onStatusRemindersChange} />
           </View>
           <View style={styles.visibilityCard}><Text style={styles.visibilityLabel}>WHAT YOUR PARTNER CAN SEE RIGHT NOW</Text><Text style={styles.visibilityValue}>{locationEnabled ? 'Your chosen precision, activity, mood, and availability' : 'Your activity, mood, and availability — no location'}</Text></View>
           <Pressable accessibilityRole="button" onPress={() => Alert.alert('Leave this troop?', 'Your former partner will immediately lose access. Local history for this troop will be removed from this device.', [{ text: 'Cancel', style: 'cancel' }, { text: 'Leave troop', style: 'destructive', onPress: onLeave }])} style={styles.unpair}><Text style={styles.unpairText}>Block or leave this troop</Text></Pressable>

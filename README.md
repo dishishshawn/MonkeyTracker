@@ -86,5 +86,6 @@ The script enables KVM acceleration, waits for Android to boot, starts Metro on 
 - Location can be fully disabled and is not required for an update.
 - Sharing precision is visible beside the current update.
 - Trail is opt-in, includes a plain-language disclosure, and always has an expiration choice.
-- Notification contents are private by default.
+- Notification contents are private by default. Scheduled expiration and
+  Trail reminders never include a caption, a place, or a location value.
 - The interface does not alert or shame a partner when location is disabled.

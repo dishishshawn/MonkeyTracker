@@ -51,6 +51,7 @@ export interface TimelineEntry {
 export interface PrivacyPreferences {
   locationEnabled: boolean;
   notificationsPrivate: boolean;
+  statusRemindersEnabled: boolean;
 }
 
 export interface PersistedAppState {

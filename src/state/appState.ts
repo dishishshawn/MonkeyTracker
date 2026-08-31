@@ -7,6 +7,7 @@ export type AppAction =
   | { type: 'publish'; update: MonkeyUpdate; entry: TimelineEntry }
   | { type: 'setLocationEnabled'; enabled: boolean }
   | { type: 'setNotificationsPrivate'; enabled: boolean }
+  | { type: 'setStatusRemindersEnabled'; enabled: boolean }
   | { type: 'deleteTimelineEntry'; id: string }
   | { type: 'toggleSaved'; id: string }
   | { type: 'saveQuickPreset'; preset: QuickPreset }
@@ -24,6 +25,7 @@ export function createInitialAppState(now = new Date()): PersistedAppState {
     preferences: {
       locationEnabled: false,
       notificationsPrivate: true,
+      statusRemindersEnabled: true,
     },
   };
 }
@@ -52,6 +54,8 @@ export function appReducer(state: PersistedAppState, action: AppAction): Persist
       };
     case 'setNotificationsPrivate':
       return { ...state, preferences: { ...state.preferences, notificationsPrivate: action.enabled } };
+    case 'setStatusRemindersEnabled':
+      return { ...state, preferences: { ...state.preferences, statusRemindersEnabled: action.enabled } };
     case 'deleteTimelineEntry':
       return { ...state, timeline: state.timeline.filter((entry) => entry.id !== action.id) };
     case 'toggleSaved':

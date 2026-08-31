@@ -30,6 +30,13 @@
           "photosPermission": "Monkey Tracker uses a photo only when you choose to send a private postcard to your paired monkey.",
           "cameraPermission": false
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#52715A",
+          "defaultChannel": "monkey-status"
+        }
       ]
     ]
   }

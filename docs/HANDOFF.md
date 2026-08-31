@@ -25,6 +25,12 @@ Implemented:
   scene, pose, and expiration.
 - Discrete expiration slider. Expired updates automatically become unknown and
   trigger an in-app notice; the web preview can also use browser notifications.
+- Native scheduled reminders through Expo Notifications for status expiration,
+  a five-minute Trail heads-up, and Trail end. Previews never contain a caption,
+  a place, a photo, or any location value; the "Private notifications" switch
+  additionally hides the activity. A third privacy switch, "Expiration
+  reminders", turns the whole set off, and leaving a troop cancels every pending
+  reminder.
 - Compact horizontal selectors with expanded activity, mood, room, pose, and
   scene-extra choices.
 - Hidden, Perch, Nearby, and Trail sharing modes with explicit Trail disclosure.
@@ -70,15 +76,21 @@ and optional cloud calls live in `src/services/`.
 
 This workspace's ignored `.env` activates the hosted account and pairing flow.
 Fresh clones fall back to the local pairing simulator until their own ignored
-environment file is configured; follow `docs/BACKEND.md`. Native background
-notifications and real location services are not built.
+environment file is configured; follow `docs/BACKEND.md`. Remote push
+notifications and real location services are still not built: scheduled
+reminders are local-only, are rebuilt from the current update whenever it or the
+preferences change, and are skipped entirely on web, where the existing browser
+`Notification` path still runs.
 
 ## Validation baseline
 
-At this checkpoint, TypeScript validation, fifteen tests, Expo dependency
+At this checkpoint, TypeScript validation, twenty-one tests, Expo dependency
 validation, and a production web export pass with the hosted public
-configuration. The latest hosted migrations are deployed and `supabase db lint
---linked --level error` reports no schema errors. Run the common local check with:
+configuration. `expo install --fix` moved `expo`, `@expo/metro-runtime`, and
+`react-native` to their SDK 57 expected patch versions, which had drifted and
+was failing `npm run verify` before this session's changes. The latest hosted
+migrations are deployed and `supabase db lint --linked --level error` reports no
+schema errors. Run the common local check with:
 
 ```sh
 npm run verify
@@ -96,16 +108,25 @@ For device behavior on this Linux workspace:
 npm run emulator
 ```
 
-Vitest covers fifteen domain/reducer/mapping/appearance cases across expiration
-boundaries, end-of-day behavior, retention, location privacy, explicit pairing
-consent, quick-scene persistence, and avatar palette fallback.
+Vitest covers twenty-one domain/reducer/mapping/appearance cases across
+expiration boundaries, end-of-day behavior, retention, location privacy,
+explicit pairing consent, quick-scene persistence, avatar palette fallback, and
+scheduled-notification planning, including the assertion that no planned preview
+can contain a caption or a place.
 `npm run backend:verify-hosted` now covers live pairing, per-user status reads,
 interactions, private postcard access, outsider isolation, and post-unpair
 revocation using temporary users deleted in `finally`; it was updated but not
 rerun after the latest two migrations because a service-role key was not placed
 in this workspace. There are no component, full UI end-to-end, or
 native-notification tests yet. The newest Android export was not rerun after
-adding Expo Image Picker.
+adding Expo Image Picker or Expo Notifications.
+
+The notification work was exercised only through the pure planner tests and a
+web smoke test: a production web export was served locally and loaded in Chrome,
+where the app booted to the cloud sign-up screen with no console errors and one
+benign `[expo-notifications] Listening to push token changes is not yet fully
+supported on web` warning emitted at import time. Nothing schedules on web, so
+the delivery path itself is untested; it needs an Android or iOS device run.
 
 `npm audit --omit=dev` currently reports 10 moderate advisories inherited
 through Expo tooling and its `xcode`/`uuid` chain, with no high or critical
@@ -119,7 +140,9 @@ downgrade, so it was not applied.
    décor, reaction bursts, and poke nudges.
 2. Run `backend:verify-hosted` with a temporary service-role key and rerun the
    Android export/device smoke test after the Image Picker addition.
-3. Add native scheduled expiration/Trail notifications with private payloads.
+3. Run the notification flow on a device: confirm the Android `monkey-status`
+   channel, the permission prompt on first publish, a delivered Trail warning
+   and Trail-end pair, and that a denied permission degrades silently.
 4. Add a scheduled database purge for expired updates, interactions, and
    orphaned postcard objects.
 5. Add component and full UI account/pairing tests around the hosted adapter.
@@ -135,8 +158,9 @@ downgrade, so it was not applied.
   cache live under `.tools/` and are intentionally ignored.
 - The hosted repository is `dishishshawn/MonkeyTracker` and is private.
 - The latest feature implementation commit is
-  `7b287c457c452acde085ffe53882b8213c52672d`
-  (`feat: make the treehouse feel alive`); later commits may update handoff docs.
+  `9a00da44bfcee0caee32449d970d62372fb1eaa3`
+  (`feat: schedule private expiration and Trail reminders`); later commits may
+  update handoff docs.
 - The hosted development backend is Supabase project `gexgntxhrgywdqmaxrkf`;
   public app values live only in ignored `.env` files.
 - This managed Codex workspace uses `.git-local` because `.git` is an immutable

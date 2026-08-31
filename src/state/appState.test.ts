@@ -22,7 +22,7 @@ describe('state privacy', () => {
     const state = {
       ...createInitialAppState(),
       currentUpdate: { ...createInitialUpdate(), locationLevel: 'Trail' as const },
-      preferences: { locationEnabled: true, notificationsPrivate: true },
+      preferences: { locationEnabled: true, notificationsPrivate: true, statusRemindersEnabled: true },
     };
     const next = appReducer(state, { type: 'setLocationEnabled', enabled: false });
     expect(next.currentUpdate.locationLevel).toBe('Hidden');

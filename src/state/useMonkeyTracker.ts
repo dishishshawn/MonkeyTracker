@@ -58,6 +58,7 @@ export function useMonkeyTracker(onExpired: () => void) {
     publish,
     setLocationEnabled: (enabled: boolean) => dispatch({ type: 'setLocationEnabled', enabled }),
     setNotificationsPrivate: (enabled: boolean) => dispatch({ type: 'setNotificationsPrivate', enabled }),
+    setStatusRemindersEnabled: (enabled: boolean) => dispatch({ type: 'setStatusRemindersEnabled', enabled }),
     deleteTimelineEntry: (id: string) => dispatch({ type: 'deleteTimelineEntry', id }),
     toggleSaved: (id: string) => dispatch({ type: 'toggleSaved', id }),
     saveQuickPreset: (preset: QuickPreset) => dispatch({ type: 'saveQuickPreset', preset }),

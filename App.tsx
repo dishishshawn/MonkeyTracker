@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { ComposerModal } from './src/components/ComposerModal';
 import { PairingSetup } from './src/components/PairingSetup';
 import { PrivacyModal } from './src/components/PrivacyModal';
+import { planNotifications } from './src/domain/notifications';
 import { createInitialUpdate, enforceLocationPreference, expirationDate } from './src/domain/updates';
 import { HistoryScreen } from './src/screens/HistoryScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
@@ -20,6 +21,12 @@ import {
   subscribeToTroopUpdates,
   unsubscribe,
 } from './src/services/backend';
+import {
+  cancelScheduledNotifications,
+  configureNotificationHandler,
+  ensureNotificationPermission,
+  syncScheduledNotifications,
+} from './src/services/notifications';
 import { remoteCurrent, remoteTimeline } from './src/services/remoteMapping';
 import { useCloudAccount } from './src/state/useCloudAccount';
 import { useMonkeyTracker } from './src/state/useMonkeyTracker';
@@ -73,6 +80,13 @@ function AppContent() {
     const timer = setTimeout(() => setPartnerExpired(true), remaining);
     return () => clearTimeout(timer);
   }, [partnerUpdate]);
+
+  useEffect(() => { configureNotificationHandler(); }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    void syncScheduledNotifications(planNotifications(state.currentUpdate, state.preferences));
+  }, [hydrated, state.currentUpdate, state.preferences]);
 
   useEffect(() => {
     if (!cloud.ready || !cloud.profile) return;
@@ -139,12 +153,22 @@ function AppContent() {
       void globalThis.Notification.requestPermission();
     }
     const published = actions.publish(draft);
+    if (state.preferences.statusRemindersEnabled) {
+      // The scheduling effect never prompts, so publishing is where we ask, and
+      // a fresh grant has to schedule the update it was granted for.
+      void ensureNotificationPermission().then((granted) => {
+        if (!granted) return;
+        // Match the reducer, which hides location when the global switch is off.
+        const stored = enforceLocationPreference(published, state.preferences.locationEnabled);
+        void syncScheduledNotifications(planNotifications(stored, state.preferences));
+      });
+    }
     if (cloud.ready && cloud.troop) {
       void publishRemoteUpdate(cloud.troop.troopId, published).catch(() => notify('Saved locally, but cloud sync needs another try.', 3500));
     }
     setComposerOpen(false);
     notify('Monkey update published and saved to your timeline.');
-  }, [actions, cloud.ready, cloud.troop, draft, notify]);
+  }, [actions, cloud.ready, cloud.troop, draft, notify, state.preferences]);
 
   if (!hydrated) return <LoadingScreen />;
 
@@ -254,6 +278,7 @@ function AppContent() {
         onClose={() => setPrivacyOpen(false)}
         onLeave={() => {
           setPrivacyOpen(false);
+          void cancelScheduledNotifications();
           setActiveScreen('home');
           setReaction(null);
           if (cloud.ready) {
@@ -266,7 +291,9 @@ function AppContent() {
         }}
         onLocationChange={actions.setLocationEnabled}
         onNotificationsChange={actions.setNotificationsPrivate}
+        onStatusRemindersChange={actions.setStatusRemindersEnabled}
         open={privacyOpen}
+        statusRemindersEnabled={state.preferences.statusRemindersEnabled}
       />
       <Toast message={toast} />
     </>
