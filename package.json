@@ -8,7 +8,7 @@
     "android": "expo start --android",
     "emulator": "bash scripts/android-emulator.sh",
     "ios": "expo start --ios",
-    "web": "expo start --web",
+    "web": "expo start --web --clear",
     "typecheck": "tsc --noEmit",
     "doctor": "expo-doctor",
     "backend:lint": "supabase db lint",
