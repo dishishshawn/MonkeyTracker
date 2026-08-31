@@ -66,7 +66,12 @@ function CloudPairing({ loading, error, profile, troop, onSignOut, onCreateInvit
   const [invite, setInvite] = useState('');
   const [code, setCode] = useState('');
   const waiting = Boolean(troop && troop.memberCount < 2);
-  const create = async () => setInvite(await onCreateInvite());
+  const normalizedCode = code.replace(/\D/g, '');
+  const isOwnCode = Boolean(invite) && normalizedCode === invite;
+  const create = async () => {
+    setCode('');
+    setInvite(await onCreateInvite());
+  };
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar style="dark" />
@@ -77,8 +82,9 @@ function CloudPairing({ loading, error, profile, troop, onSignOut, onCreateInvit
         <View style={styles.inviteCard}><Text style={styles.inviteLabel}>YOUR 15-MINUTE CODE</Text><Text selectable style={styles.inviteCode}>{invite || '••••••'}</Text><Pressable disabled={loading} onPress={() => void create()}><Text style={styles.inlineAction}>{invite ? 'Generate a new code' : 'Create invite code'}</Text></Pressable></View>
         <View style={styles.orRow}><View style={styles.line} /><Text style={styles.or}>OR JOIN THEIRS</Text><View style={styles.line} /></View>
         <TextInput accessibilityLabel="Partner invite code" keyboardType="number-pad" maxLength={6} onChangeText={setCode} placeholder="SIX-DIGIT CODE" placeholderTextColor={colors.muted} style={[styles.input, styles.codeInput]} value={code} />
-        {error && <View style={styles.errorCard}><Text style={styles.errorText}>{error}</Text></View>}
-        <Pressable accessibilityRole="button" accessibilityState={{ disabled: code.length !== 6 || loading }} disabled={code.length !== 6 || loading} onPress={() => void onAcceptInvite(code)} style={[styles.primary, (code.length !== 6 || loading) && styles.disabled]}>{loading ? <ActivityIndicator color={colors.white} /> : <Text style={styles.primaryText}>Accept and pair</Text>}</Pressable>
+        <Text style={styles.joinHint}>Enter the code your partner sent you — not the one above.</Text>
+        {(error || isOwnCode) && <View style={styles.errorCard}><Text style={styles.errorText}>{isOwnCode ? 'That is your code. Send it to your partner; enter the code they send you here.' : error}</Text></View>}
+        <Pressable accessibilityRole="button" accessibilityState={{ disabled: normalizedCode.length !== 6 || isOwnCode || loading }} disabled={normalizedCode.length !== 6 || isOwnCode || loading} onPress={() => void onAcceptInvite(normalizedCode)} style={[styles.primary, (normalizedCode.length !== 6 || isOwnCode || loading) && styles.disabled]}>{loading ? <ActivityIndicator color={colors.white} /> : <Text style={styles.primaryText}>Accept and pair</Text>}</Pressable>
         {waiting && <Pressable disabled={loading} onPress={() => void onRefresh()} style={styles.refresh}><Text style={styles.refreshText}>Check whether my partner accepted</Text></Pressable>}
         <Pressable onPress={() => void onSignOut()} style={styles.secondary}><Text style={styles.secondaryText}>Sign out</Text></Pressable>
         <Text style={styles.consent}>Pairing never enables location. Both people control their own sharing independently.</Text>
@@ -94,5 +100,5 @@ const styles = StyleSheet.create({
   primary: { backgroundColor: colors.mossDark, borderRadius: 16, alignItems: 'center', justifyContent: 'center', minHeight: 52, padding: 15, marginTop: 5 }, primaryText: { color: colors.white, fontSize: 15, fontWeight: '800' }, disabled: { opacity: 0.35 }, secondary: { alignItems: 'center', padding: 16 }, secondaryText: { color: colors.muted, fontSize: 12, fontWeight: '800' },
   errorCard: { backgroundColor: '#FBE1DC', borderRadius: 12, padding: 11, marginBottom: 10 }, errorText: { color: colors.danger, fontSize: 11, lineHeight: 16, fontWeight: '700' }, infoCard: { backgroundColor: colors.lime, borderRadius: 12, padding: 11, marginBottom: 10 }, infoText: { color: colors.mossDark, fontSize: 11, lineHeight: 16, fontWeight: '700' },
   inviteCard: { backgroundColor: colors.lime, borderRadius: 24, padding: 28, alignItems: 'center', marginVertical: 14 }, inviteLabel: { color: colors.mossDark, fontSize: 9, letterSpacing: 1.7, fontWeight: '900' }, inviteCode: { color: colors.ink, fontSize: 35, letterSpacing: 6, fontWeight: '900', marginVertical: 15 }, inlineAction: { color: colors.mossDark, fontSize: 11, fontWeight: '900' },
-  orRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 18 }, line: { flex: 1, height: 1, backgroundColor: colors.line }, or: { color: colors.muted, fontSize: 9, fontWeight: '900' }, codeInput: { textAlign: 'center', letterSpacing: 5, fontWeight: '900' }, refresh: { alignItems: 'center', backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line, borderRadius: 14, padding: 14, marginTop: 12 }, refreshText: { color: colors.mossDark, fontSize: 12, fontWeight: '900' }, consent: { color: colors.muted, textAlign: 'center', fontSize: 10, lineHeight: 15, marginTop: 8, paddingHorizontal: 15 },
+  orRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 18 }, line: { flex: 1, height: 1, backgroundColor: colors.line }, or: { color: colors.muted, fontSize: 9, fontWeight: '900' }, codeInput: { textAlign: 'center', letterSpacing: 5, fontWeight: '900', marginBottom: 7 }, joinHint: { color: colors.muted, textAlign: 'center', fontSize: 10, lineHeight: 15, marginBottom: 10 }, refresh: { alignItems: 'center', backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line, borderRadius: 14, padding: 14, marginTop: 12 }, refreshText: { color: colors.mossDark, fontSize: 12, fontWeight: '900' }, consent: { color: colors.muted, textAlign: 'center', fontSize: 10, lineHeight: 15, marginTop: 8, paddingHorizontal: 15 },
 });
