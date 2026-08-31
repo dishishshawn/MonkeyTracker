@@ -99,6 +99,7 @@ function AppContent() {
 
   useEffect(() => {
     const troopId = cloud.troop?.troopId;
+    const myUserId = cloud.session?.user.id;
     if (!cloud.ready || !troopId) return;
     let active = true;
     const sync = async () => {
@@ -109,7 +110,7 @@ function AppContent() {
           loadRemoteTimeline(troopId),
         ]);
         if (active) {
-          actions.syncRemote(remoteCurrent(myCurrentRows), remoteTimeline(timelineRows));
+          actions.syncRemote(remoteCurrent(myCurrentRows), remoteTimeline(timelineRows, myUserId));
           setPartnerUpdate(remoteCurrent(partnerCurrentRows));
         }
       } catch {
@@ -122,7 +123,7 @@ function AppContent() {
       active = false;
       void unsubscribe(channel);
     };
-  }, [actions, cloud.ready, cloud.troop?.troopId, notify]);
+  }, [actions, cloud.ready, cloud.session?.user.id, cloud.troop?.troopId, notify]);
 
   useEffect(() => {
     const troopId = cloud.troop?.troopId;
@@ -262,6 +263,7 @@ function AppContent() {
           onHome={() => setActiveScreen('home')}
           onOpenComposer={openComposer}
           onToggleSaved={actions.toggleSaved}
+          partnerName={cloud.partnerProfile?.display_name ?? 'your partner'}
           timeline={state.timeline}
         />
       )}

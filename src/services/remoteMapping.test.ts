@@ -26,7 +26,7 @@ const row: RemoteUpdate = {
 
 describe('remote update mapping', () => {
   it('preserves server IDs and timestamps in local history', () => {
-    const [entry] = remoteTimeline([row]);
+    const [entry] = remoteTimeline([row], 'user-one');
     expect(entry?.id).toBe('update-one');
     expect(entry?.update.updatedAt).toBe(row.updated_at);
     expect(entry?.update.locationLevel).toBe('Hidden');
@@ -35,5 +35,15 @@ describe('remote update mapping', () => {
 
   it('uses an expired unknown state when the server has no active update', () => {
     expect(isUpdateExpired(remoteCurrent([]), Date.now())).toBe(true);
+  });
+
+  it('attributes shared timeline entries to their author', () => {
+    const partnerRow: RemoteUpdate = { ...row, id: 'update-two', user_id: 'user-two' };
+    const entries = remoteTimeline([row, partnerRow], 'user-one');
+    expect(entries.map((entry) => entry.mine)).toEqual([true, false]);
+  });
+
+  it('claims nothing when the signed-in user is unknown', () => {
+    expect(remoteTimeline([row], undefined).every((entry) => entry.mine)).toBe(false);
   });
 });

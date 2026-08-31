@@ -61,7 +61,7 @@ export function HomeScreen({ profile, partner, ownUpdate, update, ownExpired, ex
         </View>
         <View style={styles.partnerCard}>
           <View style={styles.cardTopline}>
-            <View style={styles.identity}><MonkeyAvatar activity={update.activity} accent={partnerAccent} size="small" skin={partnerSkin} /><View><Text style={styles.cardName}>{partnerPossessive}</Text><Text style={styles.timestamp}>{formatRelativeAge(update.updatedAt)} · manual</Text></View></View>
+            <View style={styles.identity}><MonkeyAvatar activity={update.activity} accent={partnerAccent} size="small" skin={partnerSkin} /><View><Text style={styles.cardName}>{partnerPossessive}</Text><Text style={styles.timestamp}>{expired ? 'No current update' : `${formatRelativeAge(update.updatedAt)} · manual`}</Text></View></View>
             <View style={styles.precisionBadge}><Text style={styles.precisionText}>{expired ? 'Expired' : update.locationLevel}</Text></View>
           </View>
           <Text style={styles.place}>{expired ? 'Current status unknown' : placeLabel(update)}</Text>
@@ -78,11 +78,11 @@ export function HomeScreen({ profile, partner, ownUpdate, update, ownExpired, ex
         {latest ? (
           <Pressable accessibilityRole="button" onPress={onOpenHistory} style={styles.timelineCard}>
             <View style={[styles.timelineIcon, { backgroundColor: colors.lilac }]}><Text>☕</Text></View>
-            <View style={styles.timelineCopy}><Text style={styles.timelineTitle}>{latest.update.activity} · {latest.update.mood}</Text><Text style={styles.timelineMeta}>{formatTimelineTime(latest.createdAt)} · saved on this device</Text></View>
+            <View style={styles.timelineCopy}><Text style={styles.timelineTitle}>{latest.update.activity} · {latest.update.mood}</Text><Text style={styles.timelineMeta}>{formatTimelineTime(latest.createdAt)} · {latest.mine ? 'you' : partnerName}</Text></View>
             <Text style={styles.timelineHeart}>{latest.saved ? '♥' : '♡'}</Text>
           </Pressable>
         ) : (
-          <Pressable accessibilityRole="button" onPress={onOpenComposer} style={styles.emptyTimeline}><Text style={styles.emptyTitle}>No monkey business saved yet</Text><Text style={styles.emptyBody}>Your first published update will appear here.</Text></Pressable>
+          <Pressable accessibilityRole="button" onPress={onOpenComposer} style={styles.emptyTimeline}><Text style={styles.emptyTitle}>No monkey business saved yet</Text><Text style={styles.emptyBody}>Updates from either of you will appear here.</Text></Pressable>
         )}
       </ScrollView>
       <BottomNavigation active="home" onHome={() => undefined} onUpdate={onOpenComposer} onHistory={onOpenHistory} />

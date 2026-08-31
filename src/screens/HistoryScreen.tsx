@@ -8,27 +8,28 @@ import { formatTimelineTime } from '../ui/format';
 
 interface HistoryScreenProps {
   timeline: TimelineEntry[];
+  partnerName: string;
   onHome: () => void;
   onOpenComposer: () => void;
   onDelete: (id: string) => void;
   onToggleSaved: (id: string) => void;
 }
 
-export function HistoryScreen({ timeline, onHome, onOpenComposer, onDelete, onToggleSaved }: HistoryScreenProps) {
+export function HistoryScreen({ timeline, partnerName, onHome, onOpenComposer, onDelete, onToggleSaved }: HistoryScreenProps) {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.page} showsVerticalScrollIndicator={false}>
         <View style={styles.header}><View><Text style={styles.eyebrow}>PRIVATE TO YOUR TROOP</Text><Text style={styles.title}>Monkey Business</Text></View><Text style={styles.count}>{timeline.length}</Text></View>
-        <Text style={styles.intro}>Updates live on this device for 30 days unless you delete them sooner. Saving marks a favorite; it does not extend retention yet.</Text>
+        <Text style={styles.intro}>Both of your updates live here for 30 days unless the person who posted one deletes it sooner. Saving marks a favorite; it does not extend retention yet.</Text>
         {timeline.length === 0 ? (
-          <View style={styles.empty}><Text style={styles.emptyEmoji}>🌿</Text><Text style={styles.emptyTitle}>No recent monkey business</Text><Text style={styles.emptyBody}>Publish an update and it will land here.</Text><Pressable onPress={onOpenComposer} style={styles.emptyButton}><Text style={styles.emptyButtonText}>Post an update</Text></Pressable></View>
+          <View style={styles.empty}><Text style={styles.emptyEmoji}>🌿</Text><Text style={styles.emptyTitle}>No recent monkey business</Text><Text style={styles.emptyBody}>Updates from either of you will land here.</Text><Pressable onPress={onOpenComposer} style={styles.emptyButton}><Text style={styles.emptyButtonText}>Post an update</Text></Pressable></View>
         ) : timeline.map((entry) => (
           <View key={entry.id} style={styles.card}>
-            <View style={styles.cardTop}><View style={styles.icon}><Text style={styles.iconText}>{activityIcon(entry.update.activity)}</Text></View><View style={styles.cardCopy}><Text style={styles.cardTitle}>{entry.update.activity} · {entry.update.mood}</Text><Text style={styles.meta}>{formatTimelineTime(entry.createdAt)} · {entry.update.availability}</Text></View><Pressable accessibilityLabel={entry.saved ? 'Remove from saved moments' : 'Save this moment'} onPress={() => onToggleSaved(entry.id)} style={styles.save}><Text style={styles.saveText}>{entry.saved ? '♥' : '♡'}</Text></Pressable></View>
+            <View style={styles.cardTop}><View style={styles.icon}><Text style={styles.iconText}>{activityIcon(entry.update.activity)}</Text></View><View style={styles.cardCopy}><Text style={styles.cardTitle}>{entry.update.activity} · {entry.update.mood}</Text><Text style={styles.meta}>{formatTimelineTime(entry.createdAt)} · {entry.mine ? 'you' : partnerName} · {entry.update.availability}</Text></View><Pressable accessibilityLabel={entry.saved ? 'Remove from saved moments' : 'Save this moment'} onPress={() => onToggleSaved(entry.id)} style={styles.save}><Text style={styles.saveText}>{entry.saved ? '♥' : '♡'}</Text></Pressable></View>
             {!!entry.update.caption && <Text style={styles.caption}>{entry.update.caption}</Text>}
             <View style={styles.tags}><Text style={styles.tag}>{entry.update.locationLevel}</Text><Text style={styles.tag}>{entry.update.scene}</Text><Text style={styles.tag}>Expires {entry.update.expiration}</Text></View>
-            <Pressable accessibilityRole="button" onPress={() => Alert.alert('Delete this update?', 'It will be removed from local history on this device.', [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: () => onDelete(entry.id) }])} style={styles.deleteButton}><Text style={styles.deleteText}>Delete my update</Text></Pressable>
+            {entry.mine && <Pressable accessibilityRole="button" onPress={() => Alert.alert('Delete this update?', 'It will be removed from local history on this device.', [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: () => onDelete(entry.id) }])} style={styles.deleteButton}><Text style={styles.deleteText}>Delete my update</Text></Pressable>}
           </View>
         ))}
       </ScrollView>

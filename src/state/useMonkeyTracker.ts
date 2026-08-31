@@ -48,7 +48,7 @@ export function useMonkeyTracker(onExpired: () => void) {
     dispatch({
       type: 'publish',
       update,
-      entry: { id: timelineId(), update, createdAt: updatedAt, saved: false },
+      entry: { id: timelineId(), update, createdAt: updatedAt, saved: false, mine: true },
     });
     return update;
   }, []);

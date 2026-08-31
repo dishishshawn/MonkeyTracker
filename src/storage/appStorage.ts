@@ -23,7 +23,9 @@ export async function loadAppState(): Promise<PersistedAppState> {
         skin: parsed.profile.skin ?? defaultSkinForAccent(savedAccent),
       },
       currentUpdate: { ...fallback.currentUpdate, ...parsed.currentUpdate },
-      timeline: Array.isArray(parsed.timeline) ? parsed.timeline : [],
+      // Entries persisted before Monkey Business showed authorship were all
+      // published on this device, so a missing flag means the update is ours.
+      timeline: Array.isArray(parsed.timeline) ? parsed.timeline.map((entry) => ({ ...entry, mine: entry.mine !== false })) : [],
       quickPresets: Array.isArray(parsed.quickPresets) ? parsed.quickPresets : [],
       preferences: { ...fallback.preferences, ...parsed.preferences },
       version: 1,

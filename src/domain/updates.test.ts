@@ -35,8 +35,8 @@ describe('privacy and retention', () => {
   it('removes entries older than 30 days', () => {
     const now = Date.now();
     const update = createInitialUpdate(new Date(now));
-    const recent = { id: 'recent', update, createdAt: new Date(now - TIMELINE_RETENTION_MS).toISOString(), saved: false };
-    const old = { id: 'old', update, createdAt: new Date(now - TIMELINE_RETENTION_MS - 1).toISOString(), saved: true };
+    const recent = { id: 'recent', update, createdAt: new Date(now - TIMELINE_RETENTION_MS).toISOString(), saved: false, mine: true };
+    const old = { id: 'old', update, createdAt: new Date(now - TIMELINE_RETENTION_MS - 1).toISOString(), saved: true, mine: true };
     expect(pruneTimeline([old, recent], now).map((entry) => entry.id)).toEqual(['recent']);
   });
 });

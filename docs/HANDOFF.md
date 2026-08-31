@@ -90,7 +90,7 @@ preferences change, and are skipped entirely on web, where the existing browser
 
 ## Validation baseline
 
-At this checkpoint, TypeScript validation, twenty-one tests, Expo dependency
+At this checkpoint, TypeScript validation, twenty-three tests, Expo dependency
 validation, and a production web export pass with the hosted public
 configuration. `expo install --fix` moved `expo`, `@expo/metro-runtime`, and
 `react-native` to their SDK 57 expected patch versions, which had drifted and
@@ -114,11 +114,11 @@ For device behavior on this Linux workspace:
 npm run emulator
 ```
 
-Vitest covers twenty-one domain/reducer/mapping/appearance cases across
+Vitest covers twenty-three domain/reducer/mapping/appearance cases across
 expiration boundaries, end-of-day behavior, retention, location privacy,
 explicit pairing consent, quick-scene persistence, avatar palette fallback, and
-scheduled-notification planning, including the assertion that no planned preview
-can contain a caption or a place.
+scheduled-notification planning, and shared-timeline authorship, including the
+assertion that no planned preview can contain a caption or a place.
 `npm run backend:verify-hosted` now covers live pairing, per-user status reads,
 interactions, private postcard access, outsider isolation, and post-unpair
 revocation using temporary users deleted in `finally`; it was updated but not
@@ -138,6 +138,34 @@ benign `[expo-notifications] Listening to push token changes is not yet fully
 supported on web` warning emitted at import time. Nothing schedules on web, so
 the delivery path itself is untested; it needs an Android or iOS device run.
 
+A two-account browser pass ran against the hosted project with the two
+accounts isolated by origin (`localhost:4599` and `127.0.0.1:4599` serve the
+same export but hold separate `localStorage`, so each tab keeps its own
+session). It confirmed live pairing, realtime partner sync with no reload,
+`Hidden` precision surviving the round trip and being labeled as such, and the
+expired partner card degrading to "Current status unknown". It also found and
+fixed two presentation bugs described below. The poke cap could not be
+exercised: `pokes_sent_recently` returns PostgREST `PGRST202` on the hosted
+project because the retention/poke migration is still unpushed, so four
+consecutive pokes were accepted. `remainingPokes()` failing that way degrades to
+the plain "Poke sent" copy rather than an error, which is the intended
+fallback. Poke *receipt* on the partner device was not confirmed; the toast is
+transient and was checked too late.
+
+Two bugs that pass came from that session and are now fixed. `remoteCurrent`
+returns `createInitialUpdate(new Date(0))` when a partner has no active update,
+and the partner card formatted that epoch as "Updated 20696 days ago"; the card
+now shows "No current update" whenever the status is expired, so an unknown
+state never carries a confident age. Separately, `loadRemoteTimeline` filters on
+`troop_id` only — correct, because PRD 11.6 makes Monkey Business a shared
+timeline — but the screens rendered every entry as the reader's own, labeled
+"saved on this device", and offered "Delete my update" on the partner's posts.
+`TimelineEntry` now carries `mine`, set by comparing `row.user_id` against the
+signed-in user; Home and History name the author, and delete is restricted to
+the author's own entries. Timeline entries persisted before this change default
+to `mine: true`, which is right because local-only history was always the
+reader's own.
+
 `npm audit --omit=dev` currently reports 10 moderate advisories inherited
 through Expo tooling and its `xcode`/`uuid` chain, with no high or critical
 findings. npm's suggested automatic resolution is an incompatible Expo
@@ -145,9 +173,11 @@ downgrade, so it was not applied.
 
 ## Recommended next work
 
-1. Manually regression-test the two-account browser flow: self/partner status,
-   signed postcard upload/display/removal, saved quick scenes, accessories,
-   décor, reaction bursts, and poke nudges.
+1. Finish the two-account browser regression: pairing, partner sync, location
+   precision, expiration, and shared-timeline authorship were covered this
+   session, but signed postcard upload/display/removal, saved quick scenes,
+   accessories, décor, and reaction bursts were not. Poke receipt on the
+   recipient device still needs a deliberate check.
 2. Run `backend:push` for the retention/poke migration, then
    `backend:lint`, `backend:verify-hosted` (which now asserts the poke cap), and
    `backend:purge-postcards -- --dry-run`, all with a temporary service-role key.

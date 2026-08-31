@@ -21,12 +21,13 @@ export function fromRemoteUpdate(row: RemoteUpdate): MonkeyUpdate {
   };
 }
 
-export function remoteTimeline(rows: RemoteUpdate[]): TimelineEntry[] {
+export function remoteTimeline(rows: RemoteUpdate[], myUserId: string | undefined): TimelineEntry[] {
   return rows.map((row) => ({
     id: row.id,
     update: fromRemoteUpdate(row),
     createdAt: row.created_at,
     saved: false,
+    mine: Boolean(myUserId) && row.user_id === myUserId,
   }));
 }
 

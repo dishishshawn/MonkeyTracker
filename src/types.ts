@@ -46,6 +46,8 @@ export interface TimelineEntry {
   update: MonkeyUpdate;
   createdAt: string;
   saved: boolean;
+  /** Monkey Business is a shared timeline, so every entry names its author. */
+  mine: boolean;
 }
 
 export interface PrivacyPreferences {

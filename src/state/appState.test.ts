@@ -32,7 +32,7 @@ describe('state privacy', () => {
   it('cannot publish location while the global switch is off', () => {
     const state = createInitialAppState();
     const update = { ...createInitialUpdate(), locationLevel: 'Nearby' as const };
-    const entry = { id: 'one', update, createdAt: update.updatedAt, saved: false };
+    const entry = { id: 'one', update, createdAt: update.updatedAt, saved: false, mine: true };
     const next = appReducer(state, { type: 'publish', update, entry });
     expect(next.currentUpdate.locationLevel).toBe('Hidden');
     expect(next.timeline[0]?.update.locationLevel).toBe('Hidden');
