@@ -12,11 +12,11 @@ Release 0 mobile prototype for the private presence-sharing app described in [`P
 - Discrete status-expiration slider with in-app/browser expiration notices and automatic unknown state
 - Expanded activities, moods, rooms, and monkey poses behind compact horizontal selectors
 - Hidden, Perch, Nearby, and Trail sharing choices with explicit Trail disclosure
-- Lightweight reactions and a playful poke
+- Realtime reactions and pokes delivered privately to the paired monkey
 - Privacy controls with a global location kill switch and private notification previews
 - Persistent onboarding, privacy preferences, and current status across reloads
 - Real 30-day Monkey Business timeline with save and delete controls
-- Optional Supabase account, one-couple pairing, realtime sync, and RLS backend
+- Optional Supabase account, one-couple pairing, per-monkey realtime status sync, and RLS backend
 
 The simulator stores prototype data locally when Supabase values are absent.
 This development workspace is connected to a hosted Supabase project, so its

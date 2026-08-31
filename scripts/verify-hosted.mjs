@@ -32,11 +32,12 @@ async function createTestUser(client, label, runId) {
   if (error) throw error;
   if (data.user) userIds.push(data.user.id);
   assert(data.user && data.session, `Test ${label} did not receive an active session.`);
+  return data.user.id;
 }
 
 try {
   const runId = `${Date.now()}-${randomUUID().slice(0, 8)}`;
-  await Promise.all([
+  const [alphaId, partnerId] = await Promise.all([
     createTestUser(clients[0], 'alpha', runId),
     createTestUser(clients[1], 'partner', runId),
     createTestUser(clients[2], 'outsider', runId),
@@ -93,6 +94,29 @@ try {
   if (partnerReadError) throw partnerReadError;
   assert(partnerRead?.id === createdUpdate.id, 'The paired partner could not read the shared update.');
 
+  const { data: partnerCurrent, error: partnerCurrentError } = await partner
+    .from('monkey_updates')
+    .select('id')
+    .eq('troop_id', troopId)
+    .neq('user_id', partnerId)
+    .gt('expires_at', new Date().toISOString());
+  if (partnerCurrentError) throw partnerCurrentError;
+  assert(partnerCurrent.some(({ id }) => id === createdUpdate.id), 'The partner status query did not return the other monkey’s update.');
+
+  const { data: interaction, error: interactionError } = await partner
+    .from('monkey_interactions')
+    .insert({ troop_id: troopId, recipient_id: alphaId, kind: 'reaction', reaction: '🍌' })
+    .select('id')
+    .single();
+  if (interactionError) throw interactionError;
+  const { data: receivedInteraction, error: receivedInteractionError } = await alpha
+    .from('monkey_interactions')
+    .select('id')
+    .eq('id', interaction.id)
+    .maybeSingle();
+  if (receivedInteractionError) throw receivedInteractionError;
+  assert(receivedInteraction?.id === interaction.id, 'A reaction did not reach its paired recipient.');
+
   const { data: outsiderRead, error: outsiderUpdateReadError } = await outsider
     .from('monkey_updates')
     .select('id')
@@ -113,6 +137,13 @@ try {
   });
   assert(outsiderInsertError, 'An unrelated user was able to publish into the troop.');
 
+  const { error: outsiderInteractionError } = await outsider.from('monkey_interactions').insert({
+    troop_id: troopId,
+    recipient_id: alphaId,
+    kind: 'poke',
+  });
+  assert(outsiderInteractionError, 'An unrelated user was able to poke into the troop.');
+
   const { error: leaveError } = await alpha.rpc('leave_troop', { target_troop_id: troopId });
   if (leaveError) throw leaveError;
   const { data: formerMemberRead, error: formerMemberReadError } = await partner
@@ -122,7 +153,7 @@ try {
   if (formerMemberReadError) throw formerMemberReadError;
   assert(formerMemberRead.length === 0, 'A former member retained access after the troop ended.');
 
-  console.log('Hosted verification passed: appearance storage, pair, share, outsider isolation, and post-unpair revocation.');
+  console.log('Hosted verification passed: appearance storage, pair, status sync, interactions, outsider isolation, and post-unpair revocation.');
 } finally {
   const cleanupErrors = [];
   if (troopId) {

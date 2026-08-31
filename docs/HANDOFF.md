@@ -28,12 +28,14 @@ Implemented:
 - Compact horizontal selectors with expanded activity, mood, room, pose, and
   scene-extra choices.
 - Hidden, Perch, Nearby, and Trail sharing modes with explicit Trail disclosure.
-- Reactions, a playful poke, and persistent privacy controls.
+- Realtime reactions and pokes delivered to the recipient’s own monkey, plus
+  persistent privacy controls.
 - AsyncStorage persistence for pairing, profile, preferences, current status,
   and timeline across reloads.
 - Real local history with 30-day retention plus save and delete controls.
 - Optional Supabase client services for email authentication, private invite
-  pairing, update publication, history reads, unpairing, and realtime updates.
+  pairing, per-account update publication/reads, history, unpairing, and
+  realtime status/interaction delivery.
 - Cloud sign-up/sign-in and pairing screens that activate automatically when a
   Supabase URL and public key are configured.
 - A checked-in Supabase migration with hashed/expiring invite codes, two-person
@@ -43,6 +45,8 @@ Implemented:
   alpha signup, and Realtime publication deployed.
 - An additive `avatar_skin` migration with defaults for existing profiles and
   compatibility for the brief combined `blue-pink` appearance value.
+- A `monkey_interactions` migration with recipient-scoped RLS and Realtime
+  delivery for reactions and pokes.
 - A cleanup-safe hosted RLS verification script for paired, unrelated, and
   former-member access boundaries.
 
