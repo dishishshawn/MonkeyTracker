@@ -61,6 +61,10 @@ Then open the project in Expo Go or launch an iOS/Android simulator from the Exp
 `npm run verify` runs strict TypeScript checks, domain tests, and Expo dependency
 compatibility validation.
 
+The ignored `.env` supplies public Supabase settings for this workspace. The
+`npm run web` command clears Metro's cache so those settings are rebuilt into
+the browser bundle after any change.
+
 ## Local Android emulator
 
 This workspace includes a project-local Android 16 `medium_phone` emulator with Google Play APIs. Its SDK, Java runtime, and AVD data live under `.tools/` and are intentionally ignored by Git.

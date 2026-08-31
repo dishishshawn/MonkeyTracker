@@ -23,7 +23,9 @@ passwords, and service-role keys must never enter Git or the Expo environment.
    client key. Never use a service-role key in an Expo app.
 4. Configure the authentication redirect URL from `.env` in the Supabase Auth
    URL allow list.
-5. Restart Expo after changing environment values.
+5. Restart Expo after changing environment values. `npm run web` clears the
+   Metro cache automatically so the rebuilt browser bundle uses the new public
+   settings.
 
 Apply checked-in hosted Auth settings after reviewing the diff with:
 
