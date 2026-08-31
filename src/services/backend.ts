@@ -156,8 +156,8 @@ export async function loadRemoteTimeline(troopId: string): Promise<RemoteUpdate[
   return (data ?? []) as RemoteUpdate[];
 }
 
-export async function loadCurrentRemoteUpdates(troopId: string): Promise<RemoteUpdate[]> {
-  const { data, error } = await requireSupabase().from('monkey_updates').select('*').eq('troop_id', troopId).gt('expires_at', new Date().toISOString()).order('updated_at', { ascending: false });
+export async function loadCurrentRemoteUpdates(troopId: string, userId: string): Promise<RemoteUpdate[]> {
+  const { data, error } = await requireSupabase().from('monkey_updates').select('*').eq('troop_id', troopId).eq('user_id', userId).gt('expires_at', new Date().toISOString()).order('updated_at', { ascending: false });
   if (error) throw error;
   return (data ?? []) as RemoteUpdate[];
 }

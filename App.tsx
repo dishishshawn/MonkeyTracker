@@ -61,12 +61,13 @@ function AppContent() {
 
   useEffect(() => {
     const troopId = cloud.troop?.troopId;
-    if (!cloud.ready || !troopId) return;
+    const partnerId = cloud.partnerProfile?.id;
+    if (!cloud.ready || !troopId || !partnerId) return;
     let active = true;
     const sync = async () => {
       try {
         const [currentRows, timelineRows] = await Promise.all([
-          loadCurrentRemoteUpdates(troopId),
+          loadCurrentRemoteUpdates(troopId, partnerId),
           loadRemoteTimeline(troopId),
         ]);
         if (active) actions.syncRemote(remoteCurrent(currentRows), remoteTimeline(timelineRows));
@@ -80,7 +81,7 @@ function AppContent() {
       active = false;
       void unsubscribe(channel);
     };
-  }, [actions, cloud.ready, cloud.troop?.troopId, notify]);
+  }, [actions, cloud.partnerProfile?.id, cloud.ready, cloud.troop?.troopId, notify]);
 
   const openComposer = useCallback(() => {
     setDraft(enforceLocationPreference(state.currentUpdate, state.preferences.locationEnabled));
