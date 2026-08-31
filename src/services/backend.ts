@@ -16,6 +16,10 @@ export interface RemoteUpdate {
   expiration: string;
   scene: string;
   pose: string;
+  accessory: string;
+  room_decor: string;
+  photo_path: string | null;
+  photo_url?: string | null;
   updated_at: string;
   expires_at: string;
   created_at: string;
@@ -140,6 +144,8 @@ export async function leaveTroop(troopId: string): Promise<void> {
 }
 
 export async function publishRemoteUpdate(troopId: string, update: MonkeyUpdate): Promise<RemoteUpdate> {
+  let photoPath = update.photoPath || '';
+  if (update.photoUri && !photoPath) photoPath = await uploadPhotoPostcard(troopId, update.photoUri);
   const payload = {
     troop_id: troopId,
     activity: update.activity,
@@ -151,19 +157,22 @@ export async function publishRemoteUpdate(troopId: string, update: MonkeyUpdate)
     expiration: update.expiration,
     scene: update.scene,
     pose: update.pose,
+    accessory: update.accessory,
+    room_decor: update.roomDecor,
+    photo_path: photoPath || null,
     updated_at: update.updatedAt,
     expires_at: expirationDate(update).toISOString(),
   };
   const { data, error } = await requireSupabase().from('monkey_updates').insert(payload).select().single();
   if (error) throw error;
-  return data as RemoteUpdate;
+  return (await attachSignedPhotoUrls([data as RemoteUpdate]))[0] as RemoteUpdate;
 }
 
 export async function loadRemoteTimeline(troopId: string): Promise<RemoteUpdate[]> {
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const { data, error } = await requireSupabase().from('monkey_updates').select('*').eq('troop_id', troopId).gte('created_at', since).order('created_at', { ascending: false });
   if (error) throw error;
-  return (data ?? []) as RemoteUpdate[];
+  return attachSignedPhotoUrls((data ?? []) as RemoteUpdate[]);
 }
 
 export async function loadCurrentRemoteUpdates(troopId: string): Promise<RemoteUpdate[]> {
@@ -173,7 +182,7 @@ export async function loadCurrentRemoteUpdates(troopId: string): Promise<RemoteU
   if (!authData.user) return [];
   const { data, error } = await client.from('monkey_updates').select('*').eq('troop_id', troopId).neq('user_id', authData.user.id).gt('expires_at', new Date().toISOString()).order('updated_at', { ascending: false });
   if (error) throw error;
-  return (data ?? []) as RemoteUpdate[];
+  return attachSignedPhotoUrls((data ?? []) as RemoteUpdate[]);
 }
 
 export async function loadMyCurrentRemoteUpdates(troopId: string): Promise<RemoteUpdate[]> {
@@ -183,7 +192,32 @@ export async function loadMyCurrentRemoteUpdates(troopId: string): Promise<Remot
   if (!authData.user) return [];
   const { data, error } = await client.from('monkey_updates').select('*').eq('troop_id', troopId).eq('user_id', authData.user.id).gt('expires_at', new Date().toISOString()).order('updated_at', { ascending: false });
   if (error) throw error;
-  return (data ?? []) as RemoteUpdate[];
+  return attachSignedPhotoUrls((data ?? []) as RemoteUpdate[]);
+}
+
+async function uploadPhotoPostcard(troopId: string, uri: string): Promise<string> {
+  const client = requireSupabase();
+  const { data: authData, error: authError } = await client.auth.getUser();
+  if (authError) throw authError;
+  if (!authData.user) throw new Error('Sign in before sharing a postcard.');
+  const response = await fetch(uri);
+  if (!response.ok) throw new Error('The selected postcard could not be opened.');
+  const blob = await response.blob();
+  if (blob.size > 5 * 1024 * 1024) throw new Error('Postcards must be smaller than 5 MB.');
+  const extension = blob.type === 'image/png' ? 'png' : blob.type === 'image/webp' ? 'webp' : blob.type === 'image/gif' ? 'gif' : 'jpg';
+  const path = `${troopId}/${authData.user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${extension}`;
+  const { error } = await client.storage.from('monkey-postcards').upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: false });
+  if (error) throw error;
+  return path;
+}
+
+async function attachSignedPhotoUrls(rows: RemoteUpdate[]): Promise<RemoteUpdate[]> {
+  const client = requireSupabase();
+  return Promise.all(rows.map(async (row) => {
+    if (!row.photo_path) return { ...row, photo_url: null };
+    const { data, error } = await client.storage.from('monkey-postcards').createSignedUrl(row.photo_path, 60 * 60);
+    return { ...row, photo_url: error ? null : data.signedUrl };
+  }));
 }
 
 export async function sendTroopInteraction(troopId: string, recipientId: string, kind: RemoteInteraction['kind'], reaction?: string): Promise<void> {
@@ -197,8 +231,11 @@ export async function sendTroopInteraction(troopId: string, recipientId: string,
 }
 
 export async function deleteRemoteUpdate(updateId: string): Promise<void> {
-  const { error } = await requireSupabase().from('monkey_updates').delete().eq('id', updateId);
+  const client = requireSupabase();
+  const { data: update } = await client.from('monkey_updates').select('photo_path').eq('id', updateId).maybeSingle();
+  const { error } = await client.from('monkey_updates').delete().eq('id', updateId);
   if (error) throw error;
+  if (update?.photo_path) await client.storage.from('monkey-postcards').remove([update.photo_path]);
 }
 
 export function subscribeToTroopUpdates(troopId: string, onChange: () => void): RealtimeChannel {

@@ -38,3 +38,11 @@ describe('state privacy', () => {
     expect(next.timeline[0]?.update.locationLevel).toBe('Hidden');
   });
 });
+
+describe('quick scenes', () => {
+  it('saves a reusable status setup', () => {
+    const state = createInitialAppState();
+    const next = appReducer(state, { type: 'saveQuickPreset', preset: { id: 'coffee', name: 'Coffee break', activity: 'Eating', mood: 'Cozy', availability: 'Free', scene: 'Café', pose: 'Waving' } });
+    expect(next.quickPresets[0]?.name).toBe('Coffee break');
+  });
+});

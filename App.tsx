@@ -32,6 +32,8 @@ function AppContent() {
   const [activeScreen, setActiveScreen] = useState<'home' | 'history'>('home');
   const [reaction, setReaction] = useState<string | null>(null);
   const [incomingCue, setIncomingCue] = useState<string | null>(null);
+  const [incomingKind, setIncomingKind] = useState<'reaction' | 'poke' | null>(null);
+  const [incomingKey, setIncomingKey] = useState<string | null>(null);
   const [partnerUpdate, setPartnerUpdate] = useState<MonkeyUpdate>(() => createInitialUpdate(new Date(0)));
   const [partnerExpired, setPartnerExpired] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
@@ -114,8 +116,10 @@ function AppContent() {
       const senderName = cloud.partnerProfile?.display_name ?? 'Your monkey';
       const cue = interaction.kind === 'poke' ? '👋 Poke!' : interaction.reaction ?? '♡';
       setIncomingCue(cue);
+      setIncomingKind(interaction.kind);
+      setIncomingKey(interaction.id);
       if (cueTimer.current) clearTimeout(cueTimer.current);
-      cueTimer.current = setTimeout(() => setIncomingCue(null), 4500);
+      cueTimer.current = setTimeout(() => { setIncomingCue(null); setIncomingKind(null); setIncomingKey(null); }, 4500);
       notify(interaction.kind === 'poke' ? `${senderName} poked you.` : `${senderName} reacted ${cue}` , 4000);
       if (Platform.OS === 'web' && 'Notification' in globalThis && globalThis.Notification.permission === 'granted') {
         new globalThis.Notification(interaction.kind === 'poke' ? `${senderName} poked you` : `${senderName} reacted ${cue}`);
@@ -182,6 +186,8 @@ function AppContent() {
         <HomeScreen
           expired={partnerExpired}
           incomingCue={incomingCue}
+          incomingKey={incomingKey}
+          incomingKind={incomingKind}
           onPoke={() => {
             const troopId = cloud.troop?.troopId;
             const recipientId = cloud.partnerProfile?.id;
@@ -236,6 +242,11 @@ function AppContent() {
         onClose={() => setComposerOpen(false)}
         onPublish={publish}
         open={composerOpen}
+        quickPresets={state.quickPresets}
+        onSavePreset={(name, update) => {
+          actions.saveQuickPreset({ id: `${Date.now()}-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`, name, activity: update.activity, mood: update.mood, availability: update.availability, scene: update.scene, pose: update.pose });
+          notify(`${name} saved to quick scenes.`);
+        }}
       />
       <PrivacyModal
         locationEnabled={state.preferences.locationEnabled}

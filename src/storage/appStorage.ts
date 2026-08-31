@@ -24,6 +24,7 @@ export async function loadAppState(): Promise<PersistedAppState> {
       },
       currentUpdate: { ...fallback.currentUpdate, ...parsed.currentUpdate },
       timeline: Array.isArray(parsed.timeline) ? parsed.timeline : [],
+      quickPresets: Array.isArray(parsed.quickPresets) ? parsed.quickPresets : [],
       preferences: { ...fallback.preferences, ...parsed.preferences },
       version: 1,
     };

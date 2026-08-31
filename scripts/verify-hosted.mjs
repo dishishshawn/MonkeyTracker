@@ -16,6 +16,7 @@ const admin = createClient(url, serviceRoleKey, options);
 const clients = [createClient(url, anonKey, options), createClient(url, anonKey, options), createClient(url, anonKey, options)];
 const userIds = [];
 let troopId = null;
+let postcardPath = null;
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -80,11 +81,23 @@ try {
       expiration: '1 hour',
       scene: 'Couch mode',
       pose: 'Waving',
+      accessory: 'Beanie',
+      room_decor: 'Plant',
       expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
     })
-    .select('id')
+    .select('id, accessory, room_decor')
     .single();
   if (createError) throw createError;
+  assert(createdUpdate.accessory === 'Beanie' && createdUpdate.room_decor === 'Plant', 'Status personality choices were not stored.');
+
+  postcardPath = `${troopId}/${alphaId}/hosted-check.jpg`;
+  const { error: postcardUploadError } = await alpha.storage.from('monkey-postcards').upload(postcardPath, new Blob(['tiny private postcard'], { type: 'image/jpeg' }));
+  if (postcardUploadError) throw postcardUploadError;
+  const { data: partnerPostcard, error: partnerPostcardError } = await partner.storage.from('monkey-postcards').createSignedUrl(postcardPath, 60);
+  if (partnerPostcardError) throw partnerPostcardError;
+  assert(partnerPostcard?.signedUrl, 'The paired partner could not read a private postcard.');
+  const { error: outsiderPostcardError } = await outsider.storage.from('monkey-postcards').createSignedUrl(postcardPath, 60);
+  assert(outsiderPostcardError, 'An unrelated user received a private postcard URL.');
 
   const { data: partnerRead, error: partnerReadError } = await partner
     .from('monkey_updates')
@@ -153,9 +166,13 @@ try {
   if (formerMemberReadError) throw formerMemberReadError;
   assert(formerMemberRead.length === 0, 'A former member retained access after the troop ended.');
 
-  console.log('Hosted verification passed: appearance storage, pair, status sync, interactions, outsider isolation, and post-unpair revocation.');
+  console.log('Hosted verification passed: appearance, status personality, private postcards, pair sync, interactions, outsider isolation, and post-unpair revocation.');
 } finally {
   const cleanupErrors = [];
+  if (postcardPath) {
+    const { error } = await admin.storage.from('monkey-postcards').remove([postcardPath]);
+    if (error) cleanupErrors.push(error);
+  }
   if (troopId) {
     const { error } = await admin.from('troops').delete().eq('id', troopId);
     if (error) cleanupErrors.push(error);

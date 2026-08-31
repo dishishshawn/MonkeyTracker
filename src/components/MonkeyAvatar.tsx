@@ -1,6 +1,7 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Animated, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef } from 'react';
 import { colors } from '../theme';
-import { Activity, Pose } from '../types';
+import { Accessory, Activity, Pose } from '../types';
 import { defaultSkinForAccent, monkeyFurFor, monkeySkinFor } from '../ui/monkeyColorways';
 
 const props: Record<Activity, string> = {
@@ -22,6 +23,9 @@ interface MonkeyAvatarProps {
   skin?: string;
   size?: 'small' | 'large';
   pose?: Pose;
+  accessory?: Accessory;
+  animation?: 'reaction' | 'poke';
+  animationKey?: string;
 }
 
 const poseMarks: Record<Pose, string> = {
@@ -32,12 +36,40 @@ const poseMarks: Record<Pose, string> = {
   Victory: '🏆',
 };
 
-export function MonkeyAvatar({ activity, accent, skin, size = 'large', pose = 'Auto' }: MonkeyAvatarProps) {
+const accessoryMarks: Record<Accessory, string> = {
+  None: '',
+  Glasses: '👓',
+  Beanie: '🧢',
+  Crown: '👑',
+  Flower: '🌸',
+};
+
+export function MonkeyAvatar({ activity, accent, skin, size = 'large', pose = 'Auto', accessory = 'None', animation, animationKey }: MonkeyAvatarProps) {
   const compact = size === 'small';
   const fur = monkeyFurFor(accent);
   const face = monkeySkinFor(skin ?? defaultSkinForAccent(accent));
+  const nudge = useRef(new Animated.Value(0)).current;
+  const bounce = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!animation || !animationKey) return;
+    if (animation === 'poke') {
+      Animated.sequence([
+        Animated.timing(nudge, { toValue: -8, duration: 80, useNativeDriver: true }),
+        Animated.timing(nudge, { toValue: 8, duration: 100, useNativeDriver: true }),
+        Animated.timing(nudge, { toValue: -5, duration: 90, useNativeDriver: true }),
+        Animated.spring(nudge, { toValue: 0, useNativeDriver: true }),
+      ]).start();
+    } else {
+      Animated.sequence([
+        Animated.timing(bounce, { toValue: -10, duration: 150, useNativeDriver: true }),
+        Animated.spring(bounce, { toValue: 0, friction: 4, useNativeDriver: true }),
+      ]).start();
+    }
+  }, [animation, animationKey, bounce, nudge]);
+
   return (
-    <View accessibilityLabel={`Monkey avatar ${activity.toLowerCase()}`} style={[styles.wrap, compact && styles.wrapSmall]}>
+    <Animated.View accessibilityLabel={`Monkey avatar ${activity.toLowerCase()}`} style={[styles.wrap, compact && styles.wrapSmall, { transform: [{ translateX: nudge }, { translateY: bounce }] }]}>
       <View style={[styles.ear, styles.leftEar, { backgroundColor: fur.id }]}><View style={[styles.innerEar, { backgroundColor: face.id }]} /></View>
       <View style={[styles.ear, styles.rightEar, { backgroundColor: fur.id }]}><View style={[styles.innerEar, { backgroundColor: face.id }]} /></View>
       <View style={[styles.head, { backgroundColor: fur.id }]}>
@@ -49,7 +81,8 @@ export function MonkeyAvatar({ activity, accent, skin, size = 'large', pose = 'A
       </View>
       {!compact && <Text style={styles.prop}>{props[activity]}</Text>}
       {!compact && pose !== 'Auto' && <Text style={styles.pose}>{poseMarks[pose]}</Text>}
-    </View>
+      {!compact && accessory !== 'None' && <Text style={styles.accessory}>{accessoryMarks[accessory]}</Text>}
+    </Animated.View>
   );
 }
 
@@ -72,4 +105,5 @@ const styles = StyleSheet.create({
   mouthSmall: { fontSize: 13, lineHeight: 13 },
   prop: { position: 'absolute', zIndex: 3, right: -3, bottom: 2, fontSize: 35, transform: [{ rotate: '7deg' }] },
   pose: { position: 'absolute', zIndex: 4, left: -4, bottom: 4, fontSize: 30, transform: [{ rotate: '-8deg' }] },
+  accessory: { position: 'absolute', zIndex: 5, top: -8, fontSize: 34 },
 });

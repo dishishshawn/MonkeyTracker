@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import Slider from '@react-native-community/slider';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { activities, availabilities, expirationOptionsFor, locationLevels, moods, poses, scenes } from '../domain/updates';
+import { accessories, activities, availabilities, expirationOptionsFor, locationLevels, moods, poses, roomDecorations, scenes } from '../domain/updates';
 import { colors } from '../theme';
-import { Activity, Availability, LocationLevel, MonkeyUpdate, Mood, Pose, Scene } from '../types';
+import { Accessory, Activity, Availability, LocationLevel, MonkeyUpdate, Mood, Pose, QuickPreset, RoomDecor, Scene } from '../types';
+import { builtInQuickPresets } from '../ui/quickPresets';
 import { sceneColors } from '../ui/scenes';
 import { Chip } from './Chip';
 import { MonkeyAvatar } from './MonkeyAvatar';
@@ -15,16 +17,31 @@ interface ComposerProps {
   draft: MonkeyUpdate;
   locationEnabled: boolean;
   open: boolean;
+  quickPresets: QuickPreset[];
   onChange: (update: MonkeyUpdate) => void;
   onClose: () => void;
   onPublish: () => void;
+  onSavePreset: (name: string, update: MonkeyUpdate) => void;
 }
 
-export function ComposerModal({ accent, skin, draft, locationEnabled, open, onChange, onClose, onPublish }: ComposerProps) {
+export function ComposerModal({ accent, skin, draft, locationEnabled, open, quickPresets, onChange, onClose, onPublish, onSavePreset }: ComposerProps) {
   const [extrasOpen, setExtrasOpen] = useState(false);
+  const [presetName, setPresetName] = useState('');
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const set = <K extends keyof MonkeyUpdate>(key: K, value: MonkeyUpdate[K]) => onChange({ ...draft, [key]: value });
   const availableExpirations = expirationOptionsFor(draft.locationLevel);
   const expirationIndex = Math.max(0, availableExpirations.findIndex((item) => item.label === draft.expiration));
+  const allPresets = [...quickPresets, ...builtInQuickPresets];
+  const applyPreset = (preset: QuickPreset) => onChange({ ...draft, activity: preset.activity, mood: preset.mood, availability: preset.availability, scene: preset.scene, pose: preset.pose });
+  const pickPhoto = async () => {
+    setPhotoError(null);
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [4, 3], quality: 0.72 });
+    if (result.canceled) return;
+    const asset = result.assets[0];
+    if (!asset) return;
+    if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) return setPhotoError('Keep postcards under 5 MB. Tiny memories travel better.');
+    onChange({ ...draft, photoUri: asset.uri, photoPath: '' });
+  };
 
   return (
     <Modal animationType="slide" presentationStyle="pageSheet" visible={open} onRequestClose={onClose}>
@@ -37,15 +54,26 @@ export function ComposerModal({ accent, skin, draft, locationEnabled, open, onCh
           </View>
           <ScrollView contentContainerStyle={styles.composer} keyboardShouldPersistTaps="handled">
             <View style={[styles.preview, { backgroundColor: sceneColors[draft.scene] }]}>
-              <MonkeyAvatar activity={draft.activity} accent={accent} pose={draft.pose} skin={skin} />
+              <MonkeyAvatar accessory={draft.accessory} activity={draft.activity} accent={accent} pose={draft.pose} skin={skin} />
               <Text style={styles.previewText}>{draft.activity} · feeling {draft.mood.toLowerCase()}</Text>
               <Text style={styles.previewDetail}>{draft.scene} · {draft.pose}</Text>
+            </View>
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>Quick scenes</Text>
+              <ScrollView horizontal contentContainerStyle={styles.horizontalChips} showsHorizontalScrollIndicator={false}>
+                {allPresets.map((preset) => <Chip key={preset.id} label={preset.name} selected={false} onPress={() => applyPreset(preset)} />)}
+              </ScrollView>
             </View>
             <Picker horizontal label="What are you up to?" items={activities} value={draft.activity} onChange={(value) => set('activity', value as Activity)} />
             <Picker horizontal label="Current flavor" items={moods} value={draft.mood} onChange={(value) => set('mood', value as Mood)} />
             <Picker label="Can they reach you?" items={availabilities} value={draft.availability} onChange={(value) => set('availability', value as Availability)} />
             <Text style={styles.fieldLabel}>Add context (optional)</Text>
             <TextInput accessibilityLabel="Update caption" maxLength={140} multiline onChangeText={(text) => set('caption', text)} placeholder="Narrate the monkey business…" placeholderTextColor={colors.muted} style={styles.input} value={draft.caption} />
+            <View style={styles.postcardCard}>
+              <View style={styles.postcardHeading}><View><Text style={styles.fieldLabel}>Photo postcard</Text><Text style={styles.postcardNote}>Private to this troop · 5 MB max</Text></View><Pressable onPress={() => void pickPhoto()} style={styles.photoButton}><Text style={styles.photoButtonText}>{draft.photoUri ? 'Replace' : 'Choose photo'}</Text></Pressable></View>
+              {draft.photoUri && <><Image source={{ uri: draft.photoUri }} style={styles.postcardImage} /><Pressable onPress={() => onChange({ ...draft, photoUri: '', photoPath: '' })}><Text style={styles.removePhoto}>Remove postcard</Text></Pressable></>}
+              {photoError && <Text style={styles.photoError}>{photoError}</Text>}
+            </View>
             <Picker label="Location precision" items={locationEnabled ? locationLevels : ['Hidden']} value={draft.locationLevel} onChange={(value) => {
               const locationLevel = value as LocationLevel;
               onChange({ ...draft, locationLevel, ...(locationLevel === 'Trail' && !['15 min', '30 min', '1 hour'].includes(draft.expiration) ? { expiration: '1 hour' as const } : {}) });
@@ -61,6 +89,10 @@ export function ComposerModal({ accent, skin, draft, locationEnabled, open, onCh
               <View style={styles.extrasPanel}>
                 <Picker horizontal label="Set the room" items={scenes} value={draft.scene} onChange={(value) => set('scene', value as Scene)} />
                 <Picker horizontal label="Monkey pose" items={poses} value={draft.pose} onChange={(value) => set('pose', value as Pose)} />
+                <Picker horizontal label="Wear something silly" items={accessories} value={draft.accessory} onChange={(value) => set('accessory', value as Accessory)} />
+                <Picker horizontal label="Decorate the room" items={roomDecorations} value={draft.roomDecor} onChange={(value) => set('roomDecor', value as RoomDecor)} />
+                <Text style={styles.fieldLabel}>Save this setup</Text>
+                <View style={styles.savePresetRow}><TextInput accessibilityLabel="Preset name" maxLength={22} onChangeText={setPresetName} placeholder="Preset name" placeholderTextColor={colors.muted} style={styles.presetInput} value={presetName} /><Pressable disabled={!presetName.trim()} onPress={() => { onSavePreset(presetName.trim(), draft); setPresetName(''); }} style={[styles.savePresetButton, !presetName.trim() && styles.disabled]}><Text style={styles.savePresetText}>Save</Text></Pressable></View>
               </View>
             )}
             <View style={styles.expirationCard}>
@@ -101,11 +133,13 @@ const styles = StyleSheet.create({
   previewText: { color: colors.mossDark, fontSize: 13, fontWeight: '800' }, previewDetail: { color: colors.muted, fontSize: 10, fontWeight: '700', marginTop: 4 },
   field: { marginBottom: 23 }, fieldLabel: { color: colors.ink, fontSize: 14, fontWeight: '800', marginBottom: 10 }, chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 }, horizontalChips: { gap: 8, paddingRight: 14 },
   input: { minHeight: 90, borderWidth: 1, borderColor: colors.line, borderRadius: 16, backgroundColor: colors.card, padding: 14, textAlignVertical: 'top', color: colors.ink, fontSize: 15, marginBottom: 23 },
+  postcardCard: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line, borderRadius: 17, padding: 15, marginBottom: 23 }, postcardHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, postcardNote: { color: colors.muted, fontSize: 10, marginTop: -5 }, photoButton: { backgroundColor: colors.lime, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 8 }, photoButtonText: { color: colors.mossDark, fontSize: 11, fontWeight: '900' }, postcardImage: { width: '100%', aspectRatio: 4 / 3, borderRadius: 13, marginTop: 14 }, removePhoto: { color: colors.danger, fontSize: 11, fontWeight: '800', textAlign: 'center', paddingTop: 10 }, photoError: { color: colors.danger, fontSize: 11, marginTop: 9 },
   singleInput: { borderWidth: 1, borderColor: colors.line, borderRadius: 14, backgroundColor: colors.card, padding: 14, color: colors.ink, fontSize: 15, marginTop: -13, marginBottom: 23 },
   warning: { backgroundColor: '#FFF0D1', borderRadius: 13, padding: 12, marginTop: -13, marginBottom: 23 }, warningText: { color: '#74572B', fontSize: 12, lineHeight: 18, fontWeight: '600' },
   extrasToggle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line, borderRadius: 16, padding: 15, marginBottom: 18 },
   extrasTitle: { color: colors.ink, fontSize: 14, fontWeight: '800' }, extrasSummary: { color: colors.muted, fontSize: 11, marginTop: 4 }, extrasChevron: { color: colors.mossDark, fontSize: 24, fontWeight: '500' },
   extrasPanel: { backgroundColor: 'rgba(255,255,255,0.45)', borderRadius: 16, padding: 14, paddingBottom: 0, marginTop: -10, marginBottom: 18 },
+  savePresetRow: { flexDirection: 'row', gap: 8, marginBottom: 18 }, presetInput: { flex: 1, borderWidth: 1, borderColor: colors.line, borderRadius: 12, backgroundColor: colors.card, paddingHorizontal: 12, color: colors.ink }, savePresetButton: { backgroundColor: colors.mossDark, borderRadius: 12, paddingHorizontal: 18, justifyContent: 'center' }, savePresetText: { color: colors.white, fontSize: 12, fontWeight: '900' }, disabled: { opacity: 0.35 },
   expirationCard: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line, borderRadius: 17, padding: 16, marginBottom: 18 }, expirationHeading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   expirationValue: { color: colors.mossDark, fontSize: 13, fontWeight: '900', backgroundColor: colors.lime, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6, overflow: 'hidden' },
   expirationScale: { flexDirection: 'row', justifyContent: 'space-between', marginTop: -2 }, expirationEnd: { color: colors.muted, fontSize: 9, fontWeight: '700' }, expirationNote: { color: colors.muted, fontSize: 10, lineHeight: 15, marginTop: 10 },

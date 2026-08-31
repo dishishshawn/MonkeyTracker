@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { expirationDate, isUpdateExpired, timelineId } from '../domain/updates';
 import { loadAppState, saveAppState } from '../storage/appStorage';
-import { MonkeyUpdate, Profile, TimelineEntry } from '../types';
+import { MonkeyUpdate, Profile, QuickPreset, TimelineEntry } from '../types';
 import { appReducer, createInitialAppState } from './appState';
 
 export function useMonkeyTracker(onExpired: () => void) {
@@ -60,6 +60,7 @@ export function useMonkeyTracker(onExpired: () => void) {
     setNotificationsPrivate: (enabled: boolean) => dispatch({ type: 'setNotificationsPrivate', enabled }),
     deleteTimelineEntry: (id: string) => dispatch({ type: 'deleteTimelineEntry', id }),
     toggleSaved: (id: string) => dispatch({ type: 'toggleSaved', id }),
+    saveQuickPreset: (preset: QuickPreset) => dispatch({ type: 'saveQuickPreset', preset }),
     syncRemote: (currentUpdate: MonkeyUpdate, timeline: TimelineEntry[]) => dispatch({ type: 'syncRemote', currentUpdate, timeline }),
     leaveTroop: () => dispatch({ type: 'leaveTroop', now: new Date().toISOString() }),
   }), [completePairing, publish]);

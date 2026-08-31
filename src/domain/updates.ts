@@ -1,11 +1,13 @@
 import {
   Activity,
+  Accessory,
   Availability,
   Expiration,
   LocationLevel,
   MonkeyUpdate,
   Mood,
   Pose,
+  RoomDecor,
   Scene,
   TimelineEntry,
 } from '../types';
@@ -16,6 +18,8 @@ export const availabilities: Availability[] = ['Free', 'Text only', 'Busy', 'Asl
 export const locationLevels: LocationLevel[] = ['Hidden', 'Perch', 'Nearby', 'Trail'];
 export const scenes: Scene[] = ['Auto', 'Desk nest', 'Couch mode', 'Outdoors', 'Café', 'Blanket fort'];
 export const poses: Pose[] = ['Auto', 'Waving', 'Locked in', 'Flopped', 'Victory'];
+export const accessories: Accessory[] = ['None', 'Glasses', 'Beanie', 'Crown', 'Flower'];
+export const roomDecorations: RoomDecor[] = ['None', 'Plant', 'String lights', 'Poster', 'Plushie'];
 
 export const expirationOptions: Array<{ label: Expiration; minutes: number | 'day' }> = [
   { label: '15 min', minutes: 15 },
@@ -53,6 +57,10 @@ export function createInitialUpdate(now = new Date()): MonkeyUpdate {
     expiration: '2 hours',
     scene: 'Auto',
     pose: 'Auto',
+    accessory: 'None',
+    roomDecor: 'None',
+    photoUri: '',
+    photoPath: '',
     updatedAt: now.toISOString(),
   };
 }
