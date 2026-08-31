@@ -1,0 +1,452 @@
+MONKEY TRACKER
+Product Requirements Document — Release 1 candidates
+
+Version: 0.1
+Status: Draft for review. Nothing here is committed.
+Extends: PRD.txt v1.0. Section numbers below are local to this document;
+         cross-references to the base PRD are written as "base 11.x".
+
+
+0. HOW TO READ THIS
+
+Release 0 shipped presence: one couple, expiring updates, optional location,
+an illustrated stage. It works, and it is boring. Every feature here exists to
+answer the same complaint — that opening the app when nothing has changed
+gives you nothing — without reaching for the two things the product has
+already refused: pressure to post, and precision about where someone is.
+
+Three features are specified in full (sections 2-4). They are the ones worth
+building. The rest (section 5) are specified tightly enough to argue about and
+estimate, but not yet worth full treatment.
+
+Every feature in this document must satisfy the base PRD's standing rules:
+
+- Optional and off by default if it touches location in any form.
+- No guilt, no punishment, no streaks, no shaming a partner for not sharing.
+- Expired means unknown. Never imply a stale state is current.
+- No exact location, private captions, or sensitive status content in
+  analytics, logs, notification previews, or AI context.
+- Not an emergency, safety-monitoring, or proof-of-location service.
+
+A feature that cannot satisfy those is cut, not negotiated. Section 6 records
+two ideas that failed this test and one place where the base PRD already
+fails it.
+
+
+1. RELEASE GOAL
+
+Make the app worth opening when your partner has not just posted.
+
+Today the stage is static between updates. Everything below either adds
+ambient motion that nobody has to author (section 2), gives the two people a
+reason to be in the app at the same time (section 3), or turns the emptiest
+moment in the product into the warmest one (section 4).
+
+
+2. LOCAL SKY
+
+2.1 Summary
+
+Each half of the shared stage runs on its partner's own local clock, and
+optionally their own weather. Their side goes amber at their sunset and dark
+at their night. Rain streaks their sky when it is raining on them.
+
+2.2 Problem
+
+For a long-distance couple in different timezones, the single most useful
+fact — "is it a reasonable hour for them right now?" — is currently absent
+from a product whose entire job is answering "what is my person up to?".
+Users compute it in their heads or get it wrong and text at 3am.
+
+Second: the stage is visually identical whether a partner posted four minutes
+ago or four hours ago. Ambient change makes the app feel alive without asking
+anyone to author anything.
+
+2.3 User story
+
+As someone twelve hours out of sync with my partner, I open the app, see that
+their side is dark and quiet, and decide not to call — without reading a
+number, doing arithmetic, or being told what to do.
+
+2.4 Behavior
+
+Two independent tiers, separately consented:
+
+Tier 1 — Daylight
+- Derived from the partner's device timezone offset only.
+- Drives sky color, sun/moon position, and star field across the four bands:
+  dawn, day, dusk, night.
+- Transitions are continuous, not stepped, so the stage drifts over a day.
+- No location permission is required or requested.
+
+Tier 2 — Weather
+- Derived from a coarse locality (city-level or coarser, never coordinates).
+- Adds one weather layer over the sky: clear, cloud, rain, snow, fog.
+- Requires its own explicit opt-in, separate from Tier 1 and separate from
+  the existing location precision control.
+
+2.5 Privacy
+
+This is the section that decides whether the feature ships.
+
+- A timezone offset is not a coordinate, but it does narrow someone's
+  longitude to a band, and for a couple who already know roughly where each
+  other live it reveals travel. It is therefore treated as shared personal
+  data: Tier 1 is a consent surface, off by default, revocable in one tap.
+- Tier 2 is location data, full stop. It obeys every rule the existing
+  location precision control obeys: off by default, plainly labeled, never
+  required for an update, and never resolved finer than a locality.
+- Neither tier may be inferred from an IP address. Both come from an explicit
+  device signal the user has agreed to share.
+- Turning either tier off must take effect on the partner's stage promptly,
+  and must not notify the partner that it was turned off. Silent revocation
+  is the point; a "your partner stopped sharing daylight" notice converts a
+  privacy control into a social cost.
+- Weather and daylight are excluded from notification previews. "It is
+  raining on your partner" is a location claim in a lock-screen banner.
+
+2.6 Expiry semantics
+
+Daylight and weather are ambient, not status. They are properties of the
+person, not of an update, and therefore:
+
+- They continue to render after a status expires. An unknown status does not
+  black out the sky.
+- They must never be mistaken for a status. The unknown state's blank-page
+  treatment of the figure is unchanged; only the sky behind it keeps moving.
+- If the ambient signal itself goes stale (no device contact for a period to
+  be set in 2.9), the sky returns to the neutral daylight-agnostic field used
+  today. It does not freeze on the last known sky, which would be the same
+  category of lie as a stale status.
+
+2.7 Data model
+
+- Ambient state belongs to the member, not the update: a small record per
+  troop member carrying tz offset, optional locality key, optional weather
+  code, and a freshness timestamp.
+- It is written on app foreground and on a low-frequency background refresh,
+  not per update.
+- Locality key is stored as an opaque coarse identifier, never a lat/long
+  pair, so that a database leak cannot be replayed into coordinates.
+
+2.8 Out of scope
+
+- Forecasts. This is a mood light, not a weather app.
+- Any UI that names the partner's city or timezone in text.
+- Severe-weather alerting. That is the safety-service line the product does
+  not cross.
+
+2.9 Open questions
+
+- Staleness window before the sky reverts to neutral. Long enough that a
+  phone in a pocket overnight does not blank the stage; short enough that a
+  week-old sky never shows.
+- Does daylight follow the viewer's own night too, or only the partner's?
+  Symmetry is prettier; asymmetry is more useful.
+- Weather provider, and whether it can be queried without sending anything
+  more precise than a locality.
+
+2.10 Success signal
+
+Sessions that open, look, and close without posting should feel worth it.
+Measured, if at all, by retention of the ambient toggles once enabled — not
+by session counts, which would reward exactly the compulsive checking this
+product is trying not to build.
+
+
+3. SIT WITH ME
+
+3.1 Summary
+
+A mutual, time-boxed mode in which both monkeys move onto one shared stage
+doing the same activity. The divider dissolves. It ends on its own.
+
+3.2 Problem
+
+Couples apart already do this badly: a video call left running with nobody
+talking, purely for the sense of company while working, reading, or cooking.
+Nothing in Monkey Tracker currently gives two people a reason to be present at
+the same moment, and presence-at-the-same-moment is the only thing the product
+cannot fake with an expiring status.
+
+3.3 User story
+
+We are both working, four thousand miles apart. I start a session, they accept,
+and for fifty minutes our monkeys are at the same desk. Neither of us says
+anything. It ends by itself and neither of us has to end it.
+
+3.4 Behavior
+
+- Either partner proposes a session: an activity, a scene, and a duration.
+- The invitation expires on its own if unanswered. It does not persist, does
+  not badge, does not repeat, and its expiry is never surfaced to the sender
+  as a refusal.
+- On acceptance both monkeys render on a single undivided stage in the shared
+  scene, each keeping their own fur, face, accessory, and mood.
+- The session ends at its duration. Either person may leave early with one
+  tap; leaving is silent to the other beyond the stage returning to two halves.
+- While a session is live, both statuses are implicitly current: the session
+  itself is the update. When it ends, both return to normal expiry rules.
+- A gentle shared marker of elapsed time is permitted. A countdown, a
+  progress bar, or anything that reads as a target is not.
+
+3.5 Privacy and consent
+
+- Strictly mutual. No unilateral entry, ever.
+- Declining is one tap, is never counted, is never shown to the other person
+  as a decline, and is indistinguishable from not having seen the invite.
+- No session history is retained beyond the standard 30-day timeline, and a
+  session entry is deletable by either participant like any other update.
+- No content, caption, or activity from a session enters notification
+  previews beyond the invitation itself, which names only the activity.
+
+3.6 Failure modes
+
+- Connection loss mid-session must degrade to "the session is still notionally
+  running" rather than yanking the partner off the stage, then resolve at the
+  scheduled end. A partner vanishing because of a dropped socket reads as
+  rejection, and the product must not manufacture that feeling.
+- Simultaneous proposals from both sides collapse into one session rather
+  than two competing invitations.
+- A proposal to a partner whose status is unknown is allowed. Absence is not
+  a reason to block an invitation, and the invitation is not a nudge to post.
+
+3.7 Out of scope for the first version
+
+- Audio, video, or text chat inside the session. Other apps do that; the
+  entire point here is company without conversation.
+- Sessions with anyone other than the one paired partner.
+- Scheduling sessions in advance.
+
+3.8 Open questions
+
+- Default durations. A 50/10 pomodoro shape is tempting but imports a
+  productivity frame the product has deliberately avoided.
+- Whether a session can be started from a widget or a watch.
+- What the stage does when the two people choose incompatible scenes; see
+  the related "same scene dissolves the divider" idea in 5.2, which may be
+  the better primitive underneath this feature.
+
+
+4. SOMETHING WAITING
+
+4.1 Summary
+
+When a status expires and a partner's half of the stage goes to the unknown
+state, the other person may place one small drawn object there. It waits for
+them and is present when they return.
+
+4.2 Problem
+
+Every presence product treats absence as a void to be filled by nagging the
+absent person. Monkey Tracker already refuses to nag, which leaves the unknown
+state honest but inert — a blank page and nothing to do with it.
+
+This feature makes the emptiest moment in the product into the one place your
+partner can leave you something. It is the strongest expression of the app's
+stated position that not sharing is a complete and acceptable answer.
+
+4.3 User story
+
+They have been unknown since this morning. I leave a small plant on their
+empty stage. When they next open the app it is there, and the first thing the
+app has told them is that someone thought about them — not that they are
+overdue to post.
+
+4.4 Behavior
+
+- Available only while the recipient's status is expired or absent.
+- One object at a time per person. Placing a new one replaces the old one.
+- Objects come from the existing drawn decor set, extended as needed. No text,
+  no photos, no captions. The gesture is the message.
+- The object persists across the recipient's next update rather than vanishing
+  the instant they post; it should feel received, not consumed.
+- The recipient may remove it at any time, silently. The sender is never told.
+- The object never carries a call to action. No copy anywhere may frame it as
+  a reminder, a prompt, or a request to post.
+
+4.5 Privacy and abuse
+
+- Rate limited per sender per day, in the same spirit as the existing poke
+  cap, and for the same reason: a gesture that can be repeated indefinitely
+  stops being a gift and becomes pressure.
+- Notification, if any, is a single quiet message on the recipient's next
+  foreground, not a push. The product does not push someone to come look at
+  a reminder that they have been absent.
+- Nothing about placement enters analytics beyond an anonymous count.
+
+4.6 Expiry semantics
+
+This feature deliberately sits outside the expiry model: the object is not a
+status and makes no claim about anyone's current state. That must be visually
+unambiguous — it belongs to the scene, never to the figure, and never appears
+in the status line, the precision badge, or the timeline as an update.
+
+4.7 Open questions
+
+- Whether the object should itself expire after some days, or stay until
+  replaced. Staying is warmer; expiring is more consistent with the rest of
+  the product.
+- Whether both people can hold an object for each other simultaneously.
+- Whether this is reachable from the widget, which is where someone is most
+  likely to notice absence in the first place.
+
+
+5. COMPACT SPECIFICATIONS
+
+Each of these is real but not yet worth a full section. Format is: what it is,
+why it earns its place, and the constraint most likely to kill it.
+
+5.1 Widgets and complications
+Extends base 11.9.
+Home-screen and lock-screen widgets showing the partner's monkey, and a watch
+complication showing the face. Highest value per unit of effort in this
+document, because the illustration system is already flat, two-tone, and
+scales to 44px by design.
+Constraint: the widget must render the unknown state as faithfully as the app
+does. A widget that shows a stale monkey because it failed to refresh is the
+single worst violation of the expiry rule available to us.
+
+5.2 Same scene dissolves the divider
+When both partners independently choose the same scene, the stage renders as
+one undivided panel. No button, no announcement, no mechanic — you simply
+notice. Likely the underlying primitive for section 3.
+Constraint: must not become a coordination game. If anyone ever feels they
+should pick a scene to match, it has become pressure.
+
+5.3 Trail as a walk, not a map
+Replace any map surface for Trail with the monkey walking across the stage,
+arriving somewhere at the end. Motion without coordinates.
+Constraint: this is the feature most likely to be misread as a safety
+service. Copy must be unambiguous that it is a feeling, not a fix.
+
+5.4 Overlap light
+A band of light across the stage showing when the two people's waking hours
+intersect. Depends on 2.4 Tier 1.
+Constraint: must not become a scheduling tool, or it acquires obligations.
+
+5.5 Ambient sound
+Five seconds of ambient audio attached to an update, expiring with it.
+Constraint: audio is content. It needs the same private-storage handling as
+photo postcards, and must never autoplay in a notification.
+
+5.6 Zero-friction input
+NFC stickers, shortcut actions, and widget taps that post a preset scene in
+one gesture. The best status is one nobody opened an app to set.
+Constraint: presets must not drift into automation. An update the user did not
+consciously make is a location beacon wearing a costume.
+
+5.7 Postcard as backdrop
+An existing private photo postcard becomes the soft, washed-out backdrop of
+that person's half of the stage instead of a thumbnail.
+Constraint: photos are the most sensitive content in the app. A backdrop is
+much more visible than a thumbnail, including to anyone glancing at the phone.
+
+5.8 Doodle replies
+A small drawing that appears as a prop on the partner's stage for an hour, in
+the illustration system's ink weight.
+Constraint: freeform user content needs a moderation story even at a scale of
+two people, because two people can still hurt each other.
+
+5.9 Banana toss
+A two-tap micro-game across the divider. Absurd, pointless, on-tone.
+Constraint: no scores, no records, no streaks. See 6.2.
+
+5.10 The goodnight ritual
+Extends base 11.10. Both partners set Asleep; the stage goes to night
+together and one light stays on for whoever wakes first.
+Constraint: "who went to bed first" must never become legible as a pattern.
+
+5.11 Reaching across
+When both partners are live simultaneously, the monkeys lean toward the
+divider. Pure ambient delight, no mechanic.
+Constraint: none significant. Cheapest charm in this document.
+
+5.12 Ask for Perch
+A partner may request a precision upgrade for a bounded window. Approve or
+decline in one tap.
+Constraint: the app must never surface how often anyone declined, to either
+party. Making refusal cheap AND invisible is the whole feature; a decline
+count would turn the consent model into a scoreboard.
+
+5.13 Fade styles
+Choose how an update expires: straight to unknown, or leaving a residue — the
+mug stays on the stage after you have left the café.
+Constraint: residue must be visually incapable of being read as current
+status. If a residue can be mistaken for presence, it is cut.
+
+5.14 Letters on a state
+Write something delivered when the partner is next Free, or next Sleepy.
+Constraint: delivery conditions must not create an incentive to set a
+particular state. If a letter is waiting behind "Free", the app has just
+given someone a reason to lie about being free.
+
+5.15 The monthly spread
+Extends the base PRD's P2 "Monkey Recap". An illustrated printable poster
+generated from saved moments — also the honest way to keep something past the
+30-day retention window.
+Constraint: generation must run on data the user already chose to save, not
+on a re-scan of expired content.
+
+5.16 The monkey frame
+A small e-ink desk object showing the partner's current monkey. The
+illustration system would render on e-ink with no redesign.
+Constraint: a physical always-on display of someone's presence in a shared
+room is a different consent question than a phone screen. It needs its own.
+
+
+6. REJECTED, AND ONE CONFLICT
+
+6.1 Mood-driven weather — rejected
+Combining both partners' moods into the stage's weather is a lovely idea that
+quietly makes one person's bad day into the thing that ruined the picture.
+That is guilt with extra steps. If mood ever drives the sky, it drives only
+your own half, and never darkens it.
+
+6.2 Anything that counts — rejected as a category
+Unlocks, wardrobes, collections, and records all drift toward streaks. If the
+treehouse is to fill up over time, it fills from variety or from shared
+moments, never from consistency, and it never shows a counter.
+
+6.3 Conflict in the base PRD
+Base 11.11 "Couple terrarium" specifies that users "earn bananas for posting,
+reacting, or completing rituals". Earning a currency for posting is a
+participation incentive, which is the mechanism the product's own rules
+forbid — the guard that missing a day "does not destroy progress" limits the
+damage without removing the incentive. This needs resolving before the
+terrarium is built. Recommended resolution: bananas accrue from shared
+moments that both people took part in, never from individual posting
+frequency.
+
+
+7. SEQUENCING
+
+Recommended order, and why:
+
+1. Local Sky, Tier 1 only (section 2). Smallest of the three big features,
+   needs no new permission, uses the stage that already exists, and is the
+   one that changes how the app feels on first open — which is the actual
+   complaint.
+2. Widgets (5.1). Highest value per unit effort, and it puts the sky where
+   people will actually see it.
+3. Reaching across (5.11) and same scene dissolves the divider (5.2). Two
+   days of work, disproportionate charm, and 5.2 is groundwork for 6.
+4. Something waiting (section 4). Independent of the rest, and the strongest
+   statement of what this product believes.
+5. Local Sky, Tier 2 (weather). Needs the coarse-locality consent surface
+   designed properly; do not rush it in behind Tier 1.
+6. Sit with me (section 3). The largest build: needs live presence, mutual
+   invitation, and session state. Worth it, but not first.
+
+
+8. WHAT THIS DOCUMENT DOES NOT ANSWER
+
+- Whether any of this changes the Release 0 constraint of exactly one couple.
+  Nothing here requires more than two people, and nothing here should be used
+  as an argument for relaxing that.
+- Cost. Weather lookups, live sessions, and ambient refresh all add backend
+  load that the current single-project Supabase setup has never been sized for.
+- Native platform work. Widgets, complications, NFC, and e-ink are all outside
+  the Expo-managed surface the app currently lives in.
+
+END OF DOCUMENT
