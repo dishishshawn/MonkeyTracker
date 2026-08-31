@@ -170,9 +170,9 @@ downgrade, so it was not applied.
   cache live under `.tools/` and are intentionally ignored.
 - The hosted repository is `dishishshawn/MonkeyTracker` and is private.
 - The latest feature implementation commit is
-  `b039fd004a1f72e3275965fd8031becf5c4a4bde`
-  (`feat: schedule private expiration and Trail reminders`); later commits may
-  update handoff docs.
+  `4bf8357` (`feat: enforce 30-day retention and the daily poke limit`),
+  preceded by `b039fd0` (`feat: schedule private expiration and Trail
+  reminders`); later commits may update handoff docs.
 - The hosted development backend is Supabase project `gexgntxhrgywdqmaxrkf`;
   public app values live only in ignored `.env` files.
 - This managed Codex workspace uses `.git-local` because `.git` is an immutable
