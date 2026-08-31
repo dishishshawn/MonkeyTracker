@@ -158,7 +158,7 @@ downgrade, so it was not applied.
   cache live under `.tools/` and are intentionally ignored.
 - The hosted repository is `dishishshawn/MonkeyTracker` and is private.
 - The latest feature implementation commit is
-  `9a00da44bfcee0caee32449d970d62372fb1eaa3`
+  `b039fd004a1f72e3275965fd8031becf5c4a4bde`
   (`feat: schedule private expiration and Trail reminders`); later commits may
   update handoff docs.
 - The hosted development backend is Supabase project `gexgntxhrgywdqmaxrkf`;
