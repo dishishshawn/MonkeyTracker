@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import { Accessory, Activity, Mood, Pose } from '../types';
 import { defaultSkinForAccent, monkeyFurFor, monkeySkinFor } from '../ui/monkeyColorways';
 import { Monkey } from '../illustration/Monkey';
+import { useIdleLife } from '../illustration/useIdleLife';
 
 interface MonkeyAvatarProps {
   activity: Activity;
@@ -14,16 +15,23 @@ interface MonkeyAvatarProps {
   mood?: Mood;
   /** Expired status. The figure keeps its full ink line; only the color empties. */
   unknown?: boolean;
+  /** Late in this person's own local day. Only set for someone whose clock we know. */
+  drowsy?: boolean;
   animation?: 'reaction' | 'poke';
   animationKey?: string;
 }
 
-export function MonkeyAvatar({ activity, accent, skin, size = 'large', pose = 'Auto', accessory = 'None', mood, unknown, animation, animationKey }: MonkeyAvatarProps) {
+export function MonkeyAvatar({ activity, accent, skin, size = 'large', pose = 'Auto', accessory = 'None', mood, unknown, drowsy, animation, animationKey }: MonkeyAvatarProps) {
   const compact = size === 'small';
   const fur = monkeyFurFor(accent);
   const face = monkeySkinFor(skin ?? defaultSkinForAccent(accent));
   const nudge = useRef(new Animated.Value(0)).current;
   const bounce = useRef(new Animated.Value(0)).current;
+  const { breath, blinking } = useIdleLife({ unknown, drowsy });
+  // Breathing rides the same native-driver transform as the poke and reaction
+  // animations, so idle motion never re-renders the SVG underneath it.
+  const breathLift = breath.interpolate({ inputRange: [0, 1], outputRange: [0, unknown ? -1 : -1.6] });
+  const breathScale = breath.interpolate({ inputRange: [0, 1], outputRange: [1, 1.008] });
 
   useEffect(() => {
     if (!animation || !animationKey) return;
@@ -45,11 +53,12 @@ export function MonkeyAvatar({ activity, accent, skin, size = 'large', pose = 'A
   return (
     <Animated.View
       accessibilityLabel={unknown ? 'Monkey avatar, status unknown' : `Monkey avatar ${activity.toLowerCase()}`}
-      style={[styles.wrap, compact && styles.wrapSmall, { transform: [{ translateX: nudge }, { translateY: bounce }] }]}
+      style={[styles.wrap, compact && styles.wrapSmall, { transform: [{ translateX: nudge }, { translateY: Animated.add(bounce, breathLift) }, { scale: breathScale }] }]}
     >
       <Monkey
         accessory={accessory}
         activity={activity}
+        blink={blinking}
         crop={compact ? 'bust' : 'full'}
         fur={fur.id}
         ground={!compact}

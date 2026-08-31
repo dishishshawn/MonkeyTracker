@@ -60,6 +60,8 @@ export interface MonkeyProps {
   unknown?: boolean;
   /** 'bust' crops to head and ears and drops the activity layer, for small sizes. */
   crop?: 'full' | 'bust';
+  /** Idle blink. Closes the eyes for a moment without changing the mood. */
+  blink?: boolean;
   ground?: boolean;
   width?: number | string;
   height?: number | string;
@@ -68,7 +70,7 @@ export interface MonkeyProps {
 export function Monkey({
   fur: furBase, skin, activity: activityProp = 'Chilling', pose: poseProp = 'Auto',
   accessory: accessoryProp = 'None', mood: moodProp = 'Happy', unknown = false,
-  crop = 'full', ground = true, width = '100%', height = '100%',
+  crop = 'full', blink = false, ground = true, width = '100%', height = '100%',
 }: MonkeyProps) {
   const bust = crop === 'bust';
 
@@ -84,7 +86,8 @@ export function Monkey({
   if (unknown) pose = 'Auto';
 
   const face = MOOD_FACE[mood] ?? MOOD_FACE.Happy;
-  const eye: Eye = activity === 'Sleeping' && !unknown ? 'closed' : face[0];
+  // A blink closes whatever the mood was doing without changing the mood itself.
+  const eye: Eye = blink || (activity === 'Sleeping' && !unknown) ? 'closed' : face[0];
   const mouth: Mouth = face[1];
 
   // Unknown empties the color fields to paper but keeps every line at full weight.

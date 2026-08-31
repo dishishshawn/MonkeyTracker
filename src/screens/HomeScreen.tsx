@@ -9,6 +9,7 @@ import { formatRelativeAge, formatTimelineTime } from '../ui/format';
 import { BottomNavigation } from '../components/BottomNavigation';
 import { MonkeyAvatar } from '../components/MonkeyAvatar';
 import { Mark } from '../illustration/Mark';
+import { isDrowsyHour } from '../illustration/idleRules';
 import { Stage } from '../illustration/Stage';
 import { availabilityGlyph, decorGlyph, moodGlyph, precisionGlyph } from '../illustration/marks';
 
@@ -37,6 +38,9 @@ export function HomeScreen({ profile, partner, ownUpdate, update, ownExpired, ex
   const partnerSkin = partner?.skin;
   const partnerName = partner?.name || 'Your monkey';
   const partnerPossessive = partnerName.endsWith('s') ? `${partnerName}’ little world` : `${partnerName}’s little world`;
+  // Own clock only — see the note in idleRules.ts. The partner's monkey gets
+  // idle motion but never settles, because we do not know their night yet.
+  const ownDrowsy = isDrowsyHour(new Date().getHours());
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <StatusBar style="dark" />
@@ -55,7 +59,7 @@ export function HomeScreen({ profile, partner, ownUpdate, update, ownExpired, ex
             <View style={styles.roomDecor}><Mark glyph={decorGlyph[update.roomDecor]} color={colors.mossDark} size={22} /></View>
           )}
           <View style={styles.stagePeople}>
-            <View style={styles.monkeySlot}>{incomingCue && <InteractionBurst cue={incomingCue} kind={incomingKind} />}<MonkeyAvatar accessory={ownUpdate.accessory} activity={ownUpdate.activity} accent={profile.accent} animation={incomingKind ?? undefined} animationKey={incomingKey ?? undefined} mood={ownUpdate.mood} pose={ownUpdate.pose} skin={profile.skin} unknown={ownExpired} /><Text style={styles.monkeyName}>{profile.name}</Text><Text style={styles.monkeyMeta}>{ownExpired ? 'Status unknown' : `${ownUpdate.activity} · ${ownUpdate.mood.toLowerCase()}`}</Text></View>
+            <View style={styles.monkeySlot}>{incomingCue && <InteractionBurst cue={incomingCue} kind={incomingKind} />}<MonkeyAvatar accessory={ownUpdate.accessory} activity={ownUpdate.activity} accent={profile.accent} animation={incomingKind ?? undefined} animationKey={incomingKey ?? undefined} drowsy={ownDrowsy} mood={ownUpdate.mood} pose={ownUpdate.pose} skin={profile.skin} unknown={ownExpired} /><Text style={styles.monkeyName}>{profile.name}</Text><Text style={styles.monkeyMeta}>{ownExpired ? 'Status unknown' : `${ownUpdate.activity} · ${ownUpdate.mood.toLowerCase()}`}</Text></View>
             <View style={styles.monkeySlot}><MonkeyAvatar accessory={update.accessory} activity={update.activity} accent={partnerAccent} mood={update.mood} pose={update.pose} skin={partnerSkin} unknown={expired} /><Text style={styles.monkeyName}>{partnerName}</Text><Text style={styles.monkeyMeta}>{expired ? 'Status unknown' : `${update.activity} · ${update.mood.toLowerCase()}`}</Text></View>
           </View>
         </View>
