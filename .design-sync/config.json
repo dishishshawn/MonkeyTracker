@@ -1,0 +1,23 @@
+{
+  "pkg": "monkey-tracker",
+  "globalName": "MonkeyTracker",
+  "shape": "package",
+  "srcDir": "src",
+  "tsconfig": ".design-sync/tsconfig.ds-sync.json",
+  "componentSrcMap": {
+    "Chip": "src/components/Chip.tsx",
+    "MonkeyAvatar": "src/components/MonkeyAvatar.tsx",
+    "BottomNavigation": "src/components/BottomNavigation.tsx"
+  },
+  "dtsPropsFor": {
+    "Chip": "label: string; selected?: boolean; onPress: () => void;",
+    "MonkeyAvatar": "activity: 'Studying' | 'Working' | 'Eating' | 'Chilling' | 'Sleeping' | 'Commuting' | 'At the gym' | 'Cooking' | 'Gaming' | 'Out & about'; accent: string; skin?: string; size?: 'small' | 'large'; pose?: 'Auto' | 'Waving' | 'Locked in' | 'Flopped' | 'Victory'; accessory?: 'None' | 'Glasses' | 'Beanie' | 'Crown' | 'Flower'; animation?: 'reaction' | 'poke'; animationKey?: string;",
+    "BottomNavigation": "active: 'home' | 'history'; onHome: () => void; onUpdate: () => void; onHistory: () => void;"
+  },
+  "overrides": {
+    "BottomNavigation": {
+      "cardMode": "column"
+    }
+  },
+  "readmeHeader": ".design-sync/conventions.md"
+}
