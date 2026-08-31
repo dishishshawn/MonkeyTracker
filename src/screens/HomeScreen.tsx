@@ -12,18 +12,21 @@ import { MonkeyAvatar } from '../components/MonkeyAvatar';
 interface HomeScreenProps {
   profile: Profile;
   partner?: Profile;
+  ownUpdate: MonkeyUpdate;
   update: MonkeyUpdate;
+  ownExpired: boolean;
   expired: boolean;
   reaction: string | null;
+  incomingCue: string | null;
   timeline: TimelineEntry[];
   onReaction: (reaction: string) => void;
-  onNotify: (message: string) => void;
+  onPoke: () => void;
   onOpenPrivacy: () => void;
   onOpenComposer: () => void;
   onOpenHistory: () => void;
 }
 
-export function HomeScreen({ profile, partner, update, expired, reaction, timeline, onReaction, onNotify, onOpenPrivacy, onOpenComposer, onOpenHistory }: HomeScreenProps) {
+export function HomeScreen({ profile, partner, ownUpdate, update, ownExpired, expired, reaction, incomingCue, timeline, onReaction, onPoke, onOpenPrivacy, onOpenComposer, onOpenHistory }: HomeScreenProps) {
   const latest = timeline[0];
   const partnerAccent = partner?.accent ?? '#7C5540';
   const partnerSkin = partner?.skin;
@@ -41,8 +44,8 @@ export function HomeScreen({ profile, partner, update, expired, reaction, timeli
         <View style={[styles.stage, { backgroundColor: sceneColors[update.scene] }]}>
           <View style={styles.sun} /><View style={styles.cloudOne} /><View style={styles.cloudTwo} /><View style={styles.branch} />
           <View style={styles.stagePeople}>
-            <View style={styles.monkeySlot}><MonkeyAvatar activity="Chilling" accent={profile.accent} skin={profile.skin} /><Text style={styles.monkeyName}>{profile.name}</Text><Text style={styles.monkeyMeta}>Chilling · cozy</Text></View>
-            <View style={styles.monkeySlot}>{reaction && <Text style={styles.reactionBubble}>{reaction}</Text>}<MonkeyAvatar activity={update.activity} accent={partnerAccent} pose={update.pose} skin={partnerSkin} /><Text style={styles.monkeyName}>{partnerName}</Text><Text style={styles.monkeyMeta}>{expired ? 'Status unknown' : `${update.activity} · ${update.mood.toLowerCase()}`}</Text></View>
+            <View style={styles.monkeySlot}>{incomingCue && <Text style={styles.reactionBubble}>{incomingCue}</Text>}<MonkeyAvatar activity={ownUpdate.activity} accent={profile.accent} pose={ownUpdate.pose} skin={profile.skin} /><Text style={styles.monkeyName}>{profile.name}</Text><Text style={styles.monkeyMeta}>{ownExpired ? 'Status unknown' : `${ownUpdate.activity} · ${ownUpdate.mood.toLowerCase()}`}</Text></View>
+            <View style={styles.monkeySlot}><MonkeyAvatar activity={update.activity} accent={partnerAccent} pose={update.pose} skin={partnerSkin} /><Text style={styles.monkeyName}>{partnerName}</Text><Text style={styles.monkeyMeta}>{expired ? 'Status unknown' : `${update.activity} · ${update.mood.toLowerCase()}`}</Text></View>
           </View>
         </View>
         <View style={styles.partnerCard}>
@@ -56,7 +59,7 @@ export function HomeScreen({ profile, partner, update, expired, reaction, timeli
           <View style={styles.divider} />
           <View style={styles.reactions}>
             {['♡', '🍌', '🫡', '😭'].map((item) => <Pressable accessibilityLabel={`React ${item}`} key={item} onPress={() => onReaction(item)} style={[styles.reactionButton, reaction === item && styles.reactionSelected]}><Text style={styles.reactionText}>{item}</Text></Pressable>)}
-            <Pressable onPress={() => onNotify('Poke sent. Do not abuse your power.')} style={styles.pokeButton}><Text style={styles.pokeText}>Poke</Text></Pressable>
+            <Pressable onPress={onPoke} style={styles.pokeButton}><Text style={styles.pokeText}>Poke</Text></Pressable>
           </View>
         </View>
         <View style={styles.sectionHeading}><Text style={styles.sectionTitle}>Today’s monkey business</Text><Pressable onPress={onOpenHistory}><Text style={styles.sectionLink}>See all</Text></Pressable></View>

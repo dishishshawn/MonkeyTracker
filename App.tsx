@@ -5,15 +5,18 @@ import { StatusBar } from 'expo-status-bar';
 import { ComposerModal } from './src/components/ComposerModal';
 import { PairingSetup } from './src/components/PairingSetup';
 import { PrivacyModal } from './src/components/PrivacyModal';
-import { enforceLocationPreference } from './src/domain/updates';
+import { createInitialUpdate, enforceLocationPreference, expirationDate } from './src/domain/updates';
 import { HistoryScreen } from './src/screens/HistoryScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { CloudAccessScreen } from './src/screens/CloudAccessScreen';
 import {
   deleteRemoteUpdate,
   loadCurrentRemoteUpdates,
+  loadMyCurrentRemoteUpdates,
   loadRemoteTimeline,
   publishRemoteUpdate,
+  sendTroopInteraction,
+  subscribeToTroopInteractions,
   subscribeToTroopUpdates,
   unsubscribe,
 } from './src/services/backend';
@@ -28,9 +31,13 @@ function AppContent() {
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [activeScreen, setActiveScreen] = useState<'home' | 'history'>('home');
   const [reaction, setReaction] = useState<string | null>(null);
+  const [incomingCue, setIncomingCue] = useState<string | null>(null);
+  const [partnerUpdate, setPartnerUpdate] = useState<MonkeyUpdate>(() => createInitialUpdate(new Date(0)));
+  const [partnerExpired, setPartnerExpired] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
   const [draft, setDraft] = useState<MonkeyUpdate | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cueTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const notify = useCallback((message: string, duration = 2200) => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -40,6 +47,7 @@ function AppContent() {
 
   useEffect(() => () => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
+    if (cueTimer.current) clearTimeout(cueTimer.current);
   }, []);
 
   const handleExpired = useCallback(() => {
@@ -50,8 +58,19 @@ function AppContent() {
     Alert.alert('Status expired', 'Your monkey update is no longer shown as current. Post a fresh one whenever you’re ready.');
   }, [notify]);
 
-  const { state, hydrated, expired, actions } = useMonkeyTracker(handleExpired);
+  const { state, hydrated, expired: ownExpired, actions } = useMonkeyTracker(handleExpired);
   const cloud = useCloudAccount();
+
+  useEffect(() => {
+    const remaining = expirationDate(partnerUpdate).getTime() - Date.now();
+    if (remaining <= 0) {
+      setPartnerExpired(true);
+      return;
+    }
+    setPartnerExpired(false);
+    const timer = setTimeout(() => setPartnerExpired(true), remaining);
+    return () => clearTimeout(timer);
+  }, [partnerUpdate]);
 
   useEffect(() => {
     if (!cloud.ready || !cloud.profile) return;
@@ -65,11 +84,15 @@ function AppContent() {
     let active = true;
     const sync = async () => {
       try {
-        const [currentRows, timelineRows] = await Promise.all([
+        const [myCurrentRows, partnerCurrentRows, timelineRows] = await Promise.all([
+          loadMyCurrentRemoteUpdates(troopId),
           loadCurrentRemoteUpdates(troopId),
           loadRemoteTimeline(troopId),
         ]);
-        if (active) actions.syncRemote(remoteCurrent(currentRows), remoteTimeline(timelineRows));
+        if (active) {
+          actions.syncRemote(remoteCurrent(myCurrentRows), remoteTimeline(timelineRows));
+          setPartnerUpdate(remoteCurrent(partnerCurrentRows));
+        }
       } catch {
         if (active) notify('Cloud sync paused. Local data is still available.', 3500);
       }
@@ -81,6 +104,25 @@ function AppContent() {
       void unsubscribe(channel);
     };
   }, [actions, cloud.ready, cloud.troop?.troopId, notify]);
+
+  useEffect(() => {
+    const troopId = cloud.troop?.troopId;
+    const myUserId = cloud.session?.user.id;
+    if (!cloud.ready || !troopId || !myUserId) return;
+    const channel = subscribeToTroopInteractions(troopId, (interaction) => {
+      if (interaction.recipient_id !== myUserId) return;
+      const senderName = cloud.partnerProfile?.display_name ?? 'Your monkey';
+      const cue = interaction.kind === 'poke' ? '👋 Poke!' : interaction.reaction ?? '♡';
+      setIncomingCue(cue);
+      if (cueTimer.current) clearTimeout(cueTimer.current);
+      cueTimer.current = setTimeout(() => setIncomingCue(null), 4500);
+      notify(interaction.kind === 'poke' ? `${senderName} poked you.` : `${senderName} reacted ${cue}` , 4000);
+      if (Platform.OS === 'web' && 'Notification' in globalThis && globalThis.Notification.permission === 'granted') {
+        new globalThis.Notification(interaction.kind === 'poke' ? `${senderName} poked you` : `${senderName} reacted ${cue}`);
+      }
+    });
+    return () => { void unsubscribe(channel); };
+  }, [cloud.partnerProfile?.display_name, cloud.ready, cloud.session?.user.id, cloud.troop?.troopId, notify]);
 
   const openComposer = useCallback(() => {
     setDraft(enforceLocationPreference(state.currentUpdate, state.preferences.locationEnabled));
@@ -138,20 +180,35 @@ function AppContent() {
     <>
       {activeScreen === 'home' ? (
         <HomeScreen
-          expired={expired}
-          onNotify={notify}
+          expired={partnerExpired}
+          incomingCue={incomingCue}
+          onPoke={() => {
+            const troopId = cloud.troop?.troopId;
+            const recipientId = cloud.partnerProfile?.id;
+            if (!troopId || !recipientId) return notify('Your monkey is not connected yet.');
+            void sendTroopInteraction(troopId, recipientId, 'poke')
+              .then(() => notify('Poke sent. Do not abuse your power.'))
+              .catch(() => notify('That poke fell out of the tree. Try again.'));
+          }}
           onOpenComposer={openComposer}
           onOpenHistory={() => setActiveScreen('history')}
           onOpenPrivacy={() => setPrivacyOpen(true)}
           onReaction={(value) => {
             setReaction(value);
-            notify(`${value} sent. A dignified response.`);
+            const troopId = cloud.troop?.troopId;
+            const recipientId = cloud.partnerProfile?.id;
+            if (!troopId || !recipientId) return notify('Your monkey is not connected yet.');
+            void sendTroopInteraction(troopId, recipientId, 'reaction', value)
+              .then(() => notify(`${value} sent. A dignified response.`))
+              .catch(() => notify('That reaction did not make it across the branch.'));
           }}
+          ownExpired={ownExpired}
+          ownUpdate={state.currentUpdate}
           partner={cloud.partnerProfile ? { name: cloud.partnerProfile.display_name, accent: cloud.partnerProfile.avatar_accent, skin: cloud.partnerProfile.avatar_skin } : undefined}
           profile={state.profile}
           reaction={reaction}
           timeline={state.timeline}
-          update={state.currentUpdate}
+          update={partnerUpdate}
         />
       ) : (
         <HistoryScreen

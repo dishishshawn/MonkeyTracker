@@ -33,6 +33,16 @@ export interface ActiveTroop {
   memberCount: number;
 }
 
+export interface RemoteInteraction {
+  id: string;
+  troop_id: string;
+  sender_id: string;
+  recipient_id: string;
+  kind: 'reaction' | 'poke';
+  reaction: string | null;
+  created_at: string;
+}
+
 export async function signUpWithEmail(email: string, password: string, displayName: string, avatarAccent: string, avatarSkin: string): Promise<void> {
   const { error } = await requireSupabase().auth.signUp({
     email: email.trim(),
@@ -166,6 +176,26 @@ export async function loadCurrentRemoteUpdates(troopId: string): Promise<RemoteU
   return (data ?? []) as RemoteUpdate[];
 }
 
+export async function loadMyCurrentRemoteUpdates(troopId: string): Promise<RemoteUpdate[]> {
+  const client = requireSupabase();
+  const { data: authData, error: authError } = await client.auth.getUser();
+  if (authError) throw authError;
+  if (!authData.user) return [];
+  const { data, error } = await client.from('monkey_updates').select('*').eq('troop_id', troopId).eq('user_id', authData.user.id).gt('expires_at', new Date().toISOString()).order('updated_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as RemoteUpdate[];
+}
+
+export async function sendTroopInteraction(troopId: string, recipientId: string, kind: RemoteInteraction['kind'], reaction?: string): Promise<void> {
+  const { error } = await requireSupabase().from('monkey_interactions').insert({
+    troop_id: troopId,
+    recipient_id: recipientId,
+    kind,
+    reaction: kind === 'reaction' ? reaction : null,
+  });
+  if (error) throw error;
+}
+
 export async function deleteRemoteUpdate(updateId: string): Promise<void> {
   const { error } = await requireSupabase().from('monkey_updates').delete().eq('id', updateId);
   if (error) throw error;
@@ -175,6 +205,13 @@ export function subscribeToTroopUpdates(troopId: string, onChange: () => void): 
   return requireSupabase()
     .channel(`troop-updates:${troopId}`)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'monkey_updates', filter: `troop_id=eq.${troopId}` }, onChange)
+    .subscribe();
+}
+
+export function subscribeToTroopInteractions(troopId: string, onInteraction: (interaction: RemoteInteraction) => void): RealtimeChannel {
+  return requireSupabase()
+    .channel(`troop-interactions:${troopId}`)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'monkey_interactions', filter: `troop_id=eq.${troopId}` }, (payload) => onInteraction(payload.new as RemoteInteraction))
     .subscribe();
 }
 

@@ -8,8 +8,8 @@ configuration is present.
 
 The shared development project is `MonkeyTracker` in `us-east-1`, with project
 reference `gexgntxhrgywdqmaxrkf`. The schema migrations and checked-in Auth
-configuration were deployed on 2026-08-27, including independent `avatar_accent`
-fur and `avatar_skin` face colors. This workspace has an ignored `.env` containing
+configuration are deployed, including independent `avatar_accent` fur and
+`avatar_skin` face colors plus private realtime reactions and pokes. This workspace has an ignored `.env` containing
 only the public project URL and anon client key. Supabase access tokens, database
 passwords, and service-role keys must never enter Git or the Expo environment.
 
@@ -47,7 +47,8 @@ logs, CI output, or the Expo client.
 
 `src/services/backend.ts` exposes email/password and email-OTP authentication,
 profile/troop reads, invite creation and acceptance, unpairing, update
-publication, current-state and 30-day history reads, and realtime subscriptions.
+publication, separate self/partner current-state reads, 30-day history reads,
+private interaction delivery, and realtime subscriptions.
 When both public environment values are present, the app automatically enables
 the cloud sign-up/sign-in and real invite screens. Without them, it remains in
 local simulator mode.
@@ -56,6 +57,7 @@ local simulator mode.
 
 - Row-level security is mandatory and enabled by the migration.
 - Only active members of the same two-person troop can read troop data.
+- Reactions and pokes can only be sent to the other active member of the troop.
 - Leaving ends the troop for both members and immediately removes read access.
 - Invite codes are stored as hashes and expire after 15 minutes.
 - Exact location is stored only in `monkey_updates`; it must never be copied to
