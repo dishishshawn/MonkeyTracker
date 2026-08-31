@@ -134,8 +134,9 @@ downgrade, so it was not applied.
 - This workspace's local Node, Android SDK, Java runtime, emulator, and Expo
   cache live under `.tools/` and are intentionally ignored.
 - The hosted repository is `dishishshawn/MonkeyTracker` and is private.
-- GitHub `main` currently points to `7b287c457c452acde085ffe53882b8213c52672d`
-  (`feat: make the treehouse feel alive`).
+- The latest feature implementation commit is
+  `7b287c457c452acde085ffe53882b8213c52672d`
+  (`feat: make the treehouse feel alive`); later commits may update handoff docs.
 - The hosted development backend is Supabase project `gexgntxhrgywdqmaxrkf`;
   public app values live only in ignored `.env` files.
 - This managed Codex workspace uses `.git-local` because `.git` is an immutable
