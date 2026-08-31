@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createInitialAppState } from '../state/appState';
 import { PersistedAppState } from '../types';
+import { defaultSkinForAccent, monkeyFurFor } from '../ui/monkeyColorways';
 
 const STORAGE_KEY = '@monkey-tracker/app-state/v1';
 
@@ -11,10 +12,16 @@ export async function loadAppState(): Promise<PersistedAppState> {
     if (!value) return fallback;
     const parsed = JSON.parse(value) as Partial<PersistedAppState>;
     if (parsed.version !== 1 || !parsed.currentUpdate || !parsed.profile) return fallback;
+    const savedAccent = parsed.profile.accent ?? fallback.profile.accent;
     return {
       ...fallback,
       ...parsed,
-      profile: { ...fallback.profile, ...parsed.profile },
+      profile: {
+        ...fallback.profile,
+        ...parsed.profile,
+        accent: monkeyFurFor(savedAccent).id,
+        skin: parsed.profile.skin ?? defaultSkinForAccent(savedAccent),
+      },
       currentUpdate: { ...fallback.currentUpdate, ...parsed.currentUpdate },
       timeline: Array.isArray(parsed.timeline) ? parsed.timeline : [],
       preferences: { ...fallback.preferences, ...parsed.preferences },

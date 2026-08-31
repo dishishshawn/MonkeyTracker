@@ -7,8 +7,9 @@ configuration is present.
 ## Hosted development project
 
 The shared development project is `MonkeyTracker` in `us-east-1`, with project
-reference `gexgntxhrgywdqmaxrkf`. The migration and checked-in Auth configuration
-were deployed on 2026-08-27. This workspace has an ignored `.env` containing
+reference `gexgntxhrgywdqmaxrkf`. The schema migrations and checked-in Auth
+configuration were deployed on 2026-08-27, including independent `avatar_accent`
+fur and `avatar_skin` face colors. This workspace has an ignored `.env` containing
 only the public project URL and anon client key. Supabase access tokens, database
 passwords, and service-role keys must never enter Git or the Expo environment.
 

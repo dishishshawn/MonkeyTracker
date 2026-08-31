@@ -25,6 +25,7 @@ export interface RemoteProfile {
   id: string;
   display_name: string;
   avatar_accent: string;
+  avatar_skin: string;
 }
 
 export interface ActiveTroop {
@@ -32,11 +33,11 @@ export interface ActiveTroop {
   memberCount: number;
 }
 
-export async function signUpWithEmail(email: string, password: string, displayName: string, avatarAccent: string): Promise<void> {
+export async function signUpWithEmail(email: string, password: string, displayName: string, avatarAccent: string, avatarSkin: string): Promise<void> {
   const { error } = await requireSupabase().auth.signUp({
     email: email.trim(),
     password,
-    options: { data: { display_name: displayName.trim(), avatar_accent: avatarAccent } },
+    options: { data: { display_name: displayName.trim(), avatar_accent: avatarAccent, avatar_skin: avatarSkin } },
   });
   if (error) throw error;
 }
@@ -65,7 +66,7 @@ export async function loadMyProfile(): Promise<RemoteProfile | null> {
   const { data: authData, error: authError } = await requireSupabase().auth.getUser();
   if (authError) throw authError;
   if (!authData.user) return null;
-  const { data, error } = await requireSupabase().from('profiles').select('id, display_name, avatar_accent').eq('id', authData.user.id).maybeSingle();
+  const { data, error } = await requireSupabase().from('profiles').select('id, display_name, avatar_accent, avatar_skin').eq('id', authData.user.id).maybeSingle();
   if (error) throw error;
   return data as RemoteProfile | null;
 }

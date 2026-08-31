@@ -27,7 +27,7 @@ async function createTestUser(client, label, runId) {
   const { data, error } = await client.auth.signUp({
     email,
     password,
-    options: { data: { display_name: `Test ${label}`, avatar_accent: '#996744' } },
+    options: { data: { display_name: `Test ${label}`, avatar_accent: '#77B9E8', avatar_skin: '#FFD9E8' } },
   });
   if (error) throw error;
   if (data.user) userIds.push(data.user.id);
@@ -43,6 +43,13 @@ try {
   ]);
 
   const [alpha, partner, outsider] = clients;
+  const { data: appearance, error: appearanceError } = await alpha
+    .from('profiles')
+    .select('avatar_accent, avatar_skin')
+    .single();
+  if (appearanceError) throw appearanceError;
+  assert(appearance.avatar_accent === '#77B9E8' && appearance.avatar_skin === '#FFD9E8', 'Independent fur and face colors were not stored.');
+
   const { data: invite, error: inviteError } = await alpha.rpc('create_troop_invite');
   if (inviteError) throw inviteError;
   assert(typeof invite === 'string' && /^\d{6}$/.test(invite), 'Invite code was not six digits.');
@@ -115,7 +122,7 @@ try {
   if (formerMemberReadError) throw formerMemberReadError;
   assert(formerMemberRead.length === 0, 'A former member retained access after the troop ended.');
 
-  console.log('Hosted RLS verification passed: pair, share, outsider isolation, and post-unpair revocation.');
+  console.log('Hosted verification passed: appearance storage, pair, share, outsider isolation, and post-unpair revocation.');
 } finally {
   const cleanupErrors = [];
   if (troopId) {

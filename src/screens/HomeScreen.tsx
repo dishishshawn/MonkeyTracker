@@ -36,7 +36,7 @@ export function HomeScreen({ profile, update, expired, reaction, timeline, onRea
         <View style={[styles.stage, { backgroundColor: sceneColors[update.scene] }]}>
           <View style={styles.sun} /><View style={styles.cloudOne} /><View style={styles.cloudTwo} /><View style={styles.branch} />
           <View style={styles.stagePeople}>
-            <View style={styles.monkeySlot}><MonkeyAvatar activity="Chilling" accent={profile.accent} /><Text style={styles.monkeyName}>{profile.name}</Text><Text style={styles.monkeyMeta}>Chilling · cozy</Text></View>
+            <View style={styles.monkeySlot}><MonkeyAvatar activity="Chilling" accent={profile.accent} skin={profile.skin} /><Text style={styles.monkeyName}>{profile.name}</Text><Text style={styles.monkeyMeta}>Chilling · cozy</Text></View>
             <View style={styles.monkeySlot}>{reaction && <Text style={styles.reactionBubble}>{reaction}</Text>}<MonkeyAvatar activity={update.activity} accent="#7C5540" pose={update.pose} /><Text style={styles.monkeyName}>Your person</Text><Text style={styles.monkeyMeta}>{expired ? 'Status unknown' : `${update.activity} · ${update.mood.toLowerCase()}`}</Text></View>
           </View>
         </View>

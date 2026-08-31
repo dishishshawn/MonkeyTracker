@@ -83,7 +83,7 @@ export function useCloudAccount() {
     ready: Boolean(session && troop && troop.memberCount >= 2),
     refresh,
     signIn: (email: string, password: string) => run(() => signInWithEmail(email, password)),
-    signUp: (email: string, password: string, displayName: string, accent: string) => run(() => signUpWithEmail(email, password, displayName, accent)),
+    signUp: (email: string, password: string, displayName: string, accent: string, skin: string) => run(() => signUpWithEmail(email, password, displayName, accent, skin)),
     signOut: () => run(signOut),
     createInvite: async () => {
       let code = '';

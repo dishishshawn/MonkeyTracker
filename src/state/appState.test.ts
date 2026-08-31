@@ -5,13 +5,13 @@ import { appReducer, createInitialAppState } from './appState';
 describe('pairing consent', () => {
   it('does not pair without explicit accepted consent', () => {
     const state = createInitialAppState();
-    const next = appReducer(state, { type: 'completePairing', profile: { name: 'Alex', accent: '#123456' }, consentAccepted: false });
+    const next = appReducer(state, { type: 'completePairing', profile: { name: 'Alex', accent: '#123456', skin: '#EBC6A6' }, consentAccepted: false });
     expect(next.paired).toBe(false);
   });
 
   it('pairs only after consent with a non-empty profile', () => {
     const state = createInitialAppState();
-    const next = appReducer(state, { type: 'completePairing', profile: { name: 'Alex', accent: '#123456' }, consentAccepted: true });
+    const next = appReducer(state, { type: 'completePairing', profile: { name: 'Alex', accent: '#123456', skin: '#EBC6A6' }, consentAccepted: true });
     expect(next.paired).toBe(true);
     expect(next.profile.name).toBe('Alex');
   });

@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme';
 import { Activity, Pose } from '../types';
-import { monkeyColorwayFor } from '../ui/monkeyColorways';
+import { defaultSkinForAccent, monkeyFurFor, monkeySkinFor } from '../ui/monkeyColorways';
 
 const props: Record<Activity, string> = {
   Studying: '📚',
@@ -19,6 +19,7 @@ const props: Record<Activity, string> = {
 interface MonkeyAvatarProps {
   activity: Activity;
   accent: string;
+  skin?: string;
   size?: 'small' | 'large';
   pose?: Pose;
 }
@@ -31,16 +32,17 @@ const poseMarks: Record<Pose, string> = {
   Victory: '🏆',
 };
 
-export function MonkeyAvatar({ activity, accent, size = 'large', pose = 'Auto' }: MonkeyAvatarProps) {
+export function MonkeyAvatar({ activity, accent, skin, size = 'large', pose = 'Auto' }: MonkeyAvatarProps) {
   const compact = size === 'small';
-  const colorway = monkeyColorwayFor(accent);
+  const fur = monkeyFurFor(accent);
+  const face = monkeySkinFor(skin ?? defaultSkinForAccent(accent));
   return (
     <View accessibilityLabel={`Monkey avatar ${activity.toLowerCase()}`} style={[styles.wrap, compact && styles.wrapSmall]}>
-      <View style={[styles.ear, styles.leftEar, { backgroundColor: colorway.fur }]}><View style={[styles.innerEar, { backgroundColor: colorway.innerEar }]} /></View>
-      <View style={[styles.ear, styles.rightEar, { backgroundColor: colorway.fur }]}><View style={[styles.innerEar, { backgroundColor: colorway.innerEar }]} /></View>
-      <View style={[styles.head, { backgroundColor: colorway.fur }]}>
-        <View style={[styles.face, { backgroundColor: colorway.face }]}>
-          {colorway.cheek && <><View style={[styles.cheek, styles.leftCheek, compact && styles.cheekSmall, { backgroundColor: colorway.cheek }]} /><View style={[styles.cheek, styles.rightCheek, compact && styles.cheekSmall, { backgroundColor: colorway.cheek }]} /></>}
+      <View style={[styles.ear, styles.leftEar, { backgroundColor: fur.id }]}><View style={[styles.innerEar, { backgroundColor: face.id }]} /></View>
+      <View style={[styles.ear, styles.rightEar, { backgroundColor: fur.id }]}><View style={[styles.innerEar, { backgroundColor: face.id }]} /></View>
+      <View style={[styles.head, { backgroundColor: fur.id }]}>
+        <View style={[styles.face, { backgroundColor: face.id }]}>
+          {face.cheek && <><View style={[styles.cheek, styles.leftCheek, compact && styles.cheekSmall, { backgroundColor: face.cheek }]} /><View style={[styles.cheek, styles.rightCheek, compact && styles.cheekSmall, { backgroundColor: face.cheek }]} /></>}
           <Text style={[styles.eyes, compact && styles.eyesSmall]}>•  •</Text>
           <Text style={[styles.mouth, compact && styles.mouthSmall]}>ᴗ</Text>
         </View>
