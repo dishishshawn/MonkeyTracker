@@ -1,6 +1,6 @@
 # Monkey Tracker handoff
 
-Last updated: 2026-08-27
+Last updated: 2026-08-31
 
 This file is the shared, tool-agnostic checkpoint for Codex, Claude Code, and
 human contributors. Update it after material work so a new session can resume
@@ -62,7 +62,8 @@ conflicts with it, preserve the PRD guardrails and resolve the discrepancy.
 
 ## Architecture
 
-`App.tsx` is now a small coordinator. Screens and modal UI live in
+`App.tsx` coordinates account state, separate self/partner updates, realtime
+interactions, screens, and modals. Screen and modal UI live in
 `src/screens/` and `src/components/`; the reducer and hook live in `src/state/`;
 pure rules live in `src/domain/`; AsyncStorage is isolated in `src/storage/`;
 and optional cloud calls live in `src/services/`.
@@ -74,10 +75,10 @@ notifications and real location services are not built.
 
 ## Validation baseline
 
-At this checkpoint, TypeScript validation, fourteen tests, and production exports
-for web and Android pass with the hosted public configuration. Auth health and
-an unauthenticated RLS read were also checked against the live project. Run the
-common local check with:
+At this checkpoint, TypeScript validation, fifteen tests, Expo dependency
+validation, and a production web export pass with the hosted public
+configuration. The latest hosted migrations are deployed and `supabase db lint
+--linked --level error` reports no schema errors. Run the common local check with:
 
 ```sh
 npm run verify
@@ -95,12 +96,16 @@ For device behavior on this Linux workspace:
 npm run emulator
 ```
 
-Vitest covers fourteen domain/reducer/mapping/appearance cases across expiration
+Vitest covers fifteen domain/reducer/mapping/appearance cases across expiration
 boundaries, end-of-day behavior, retention, location privacy, explicit pairing
-consent, and avatar palette fallback. `npm run backend:verify-hosted` covers live
-pair acceptance, partner update visibility, outsider isolation, and post-unpair
-revocation using temporary users that are deleted after the run. There are no component,
-full UI end-to-end, or native-notification tests yet.
+consent, quick-scene persistence, and avatar palette fallback.
+`npm run backend:verify-hosted` now covers live pairing, per-user status reads,
+interactions, private postcard access, outsider isolation, and post-unpair
+revocation using temporary users deleted in `finally`; it was updated but not
+rerun after the latest two migrations because a service-role key was not placed
+in this workspace. There are no component, full UI end-to-end, or
+native-notification tests yet. The newest Android export was not rerun after
+adding Expo Image Picker.
 
 `npm audit --omit=dev` currently reports 10 moderate advisories inherited
 through Expo tooling and its `xcode`/`uuid` chain, with no high or critical
@@ -109,12 +114,18 @@ downgrade, so it was not applied.
 
 ## Recommended next work
 
-1. Add native scheduled expiration/Trail notifications with private payloads.
-2. Add a scheduled database purge for expired 30-day retention data.
-3. Add component and full UI account/pairing tests around the hosted adapter.
-4. Add real permission-gated Perch/location services only after device privacy
+1. Manually regression-test the two-account browser flow: self/partner status,
+   signed postcard upload/display/removal, saved quick scenes, accessories,
+   décor, reaction bursts, and poke nudges.
+2. Run `backend:verify-hosted` with a temporary service-role key and rerun the
+   Android export/device smoke test after the Image Picker addition.
+3. Add native scheduled expiration/Trail notifications with private payloads.
+4. Add a scheduled database purge for expired updates, interactions, and
+   orphaned postcard objects.
+5. Add component and full UI account/pairing tests around the hosted adapter.
+6. Add real permission-gated Perch/location services only after device privacy
    and battery testing.
-5. Configure production SMTP, abuse controls, deletion/export flows, and a
+7. Configure production SMTP, abuse controls, deletion/export flows, and a
    separate production Supabase organization before inviting broader testers.
 
 ## Environment notes
@@ -123,6 +134,8 @@ downgrade, so it was not applied.
 - This workspace's local Node, Android SDK, Java runtime, emulator, and Expo
   cache live under `.tools/` and are intentionally ignored.
 - The hosted repository is `dishishshawn/MonkeyTracker` and is private.
+- GitHub `main` currently points to `7b287c457c452acde085ffe53882b8213c52672d`
+  (`feat: make the treehouse feel alive`).
 - The hosted development backend is Supabase project `gexgntxhrgywdqmaxrkf`;
   public app values live only in ignored `.env` files.
 - This managed Codex workspace uses `.git-local` because `.git` is an immutable
