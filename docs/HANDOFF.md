@@ -166,6 +166,29 @@ the author's own entries. Timeline entries persisted before this change default
 to `mine: true`, which is right because local-only history was always the
 reader's own.
 
+The emoji-and-rectangle placeholder art is gone. `src/illustration/` holds
+three components ported from a Claude Design illustration system: `Monkey`
+(a layered figure — fur and face tone are color props, with activity, pose and
+accessory composed over the base at fixed anchors, plus five eye and five mouth
+shapes driving mood), `Stage` (six scenes plus an unknown state, all on one
+grammar with a shared horizon at y=150 so two different scenes can butt
+together mid-card), and `Mark` (24 glyphs at one ink weight: availability,
+location precision, mood, decor). They render through `react-native-svg`.
+
+The expired state is drawn, not faded: the figure keeps full posture, size and
+ink line, and only the color fields empty to paper, with three soft dots
+overhead. Nothing dims, greys, or slumps. `HomeScreen` passes `unknown` to the
+stage, the stage avatar AND the partner-card avatar, so an expired status never
+shows stale color anywhere.
+
+Two mapping gaps the illustration system did not cover, both approximated in
+`src/illustration/marks.ts`: it shipped `Fizzy` and `Melted` moods, which this
+app does not have, and drew nothing for `Social` or `Quiet` (Social borrows the
+fizzy mark and a chatty open mouth; Quiet uses the melted mark and the neutral
+Calm face). Its decor set is generic (stack, lamp, mug, rug, window) rather than
+this app's four, so only `Plant` is exact — `String lights`, `Poster` and
+`Plushie` borrow the nearest shape. Both are worth a follow-up design pass.
+
 `npm audit --omit=dev` currently reports 10 moderate advisories inherited
 through Expo tooling and its `xcode`/`uuid` chain, with no high or critical
 findings. npm's suggested automatic resolution is an incompatible Expo

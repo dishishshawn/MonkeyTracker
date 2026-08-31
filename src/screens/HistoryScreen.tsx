@@ -5,6 +5,8 @@ import { BottomNavigation } from '../components/BottomNavigation';
 import { colors, shadow } from '../theme';
 import { TimelineEntry } from '../types';
 import { formatTimelineTime } from '../ui/format';
+import { Mark } from '../illustration/Mark';
+import { moodGlyph } from '../illustration/marks';
 
 interface HistoryScreenProps {
   timeline: TimelineEntry[];
@@ -26,7 +28,7 @@ export function HistoryScreen({ timeline, partnerName, onHome, onOpenComposer, o
           <View style={styles.empty}><Text style={styles.emptyEmoji}>🌿</Text><Text style={styles.emptyTitle}>No recent monkey business</Text><Text style={styles.emptyBody}>Updates from either of you will land here.</Text><Pressable onPress={onOpenComposer} style={styles.emptyButton}><Text style={styles.emptyButtonText}>Post an update</Text></Pressable></View>
         ) : timeline.map((entry) => (
           <View key={entry.id} style={styles.card}>
-            <View style={styles.cardTop}><View style={styles.icon}><Text style={styles.iconText}>{activityIcon(entry.update.activity)}</Text></View><View style={styles.cardCopy}><Text style={styles.cardTitle}>{entry.update.activity} · {entry.update.mood}</Text><Text style={styles.meta}>{formatTimelineTime(entry.createdAt)} · {entry.mine ? 'you' : partnerName} · {entry.update.availability}</Text></View><Pressable accessibilityLabel={entry.saved ? 'Remove from saved moments' : 'Save this moment'} onPress={() => onToggleSaved(entry.id)} style={styles.save}><Text style={styles.saveText}>{entry.saved ? '♥' : '♡'}</Text></Pressable></View>
+            <View style={styles.cardTop}><View style={styles.icon}><Mark glyph={moodGlyph[entry.update.mood]} color={colors.ink} size={22} /></View><View style={styles.cardCopy}><Text style={styles.cardTitle}>{entry.update.activity} · {entry.update.mood}</Text><Text style={styles.meta}>{formatTimelineTime(entry.createdAt)} · {entry.mine ? 'you' : partnerName} · {entry.update.availability}</Text></View><Pressable accessibilityLabel={entry.saved ? 'Remove from saved moments' : 'Save this moment'} onPress={() => onToggleSaved(entry.id)} style={styles.save}><Text style={styles.saveText}>{entry.saved ? '♥' : '♡'}</Text></Pressable></View>
             {!!entry.update.caption && <Text style={styles.caption}>{entry.update.caption}</Text>}
             <View style={styles.tags}><Text style={styles.tag}>{entry.update.locationLevel}</Text><Text style={styles.tag}>{entry.update.scene}</Text><Text style={styles.tag}>Expires {entry.update.expiration}</Text></View>
             {entry.mine && <Pressable accessibilityRole="button" onPress={() => Alert.alert('Delete this update?', 'It will be removed from local history on this device.', [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: () => onDelete(entry.id) }])} style={styles.deleteButton}><Text style={styles.deleteText}>Delete my update</Text></Pressable>}
@@ -36,13 +38,6 @@ export function HistoryScreen({ timeline, partnerName, onHome, onOpenComposer, o
       <BottomNavigation active="history" onHome={onHome} onUpdate={onOpenComposer} onHistory={() => undefined} />
     </SafeAreaView>
   );
-}
-
-function activityIcon(activity: TimelineEntry['update']['activity']): string {
-  const icons: Record<TimelineEntry['update']['activity'], string> = {
-    Studying: '📚', Working: '💻', Eating: '🍜', Chilling: '🎧', Sleeping: '💤', Commuting: '🚌', 'At the gym': '🏋️', Cooking: '🍳', Gaming: '🎮', 'Out & about': '✨',
-  };
-  return icons[activity];
 }
 
 const styles = StyleSheet.create({
