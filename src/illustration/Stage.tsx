@@ -14,11 +14,17 @@ export interface StageProps {
   /** Expired status: the scene props leave with the update, so nothing stale is implied. */
   unknown?: boolean;
   side?: 'left' | 'right';
+  /**
+   * Draw the scene's props. False renders only sky, hills and horizon, so a
+   * scene shared by both partners is drawn once across the two panels and
+   * reads as one continuous world rather than the same picture twice.
+   */
+  props?: boolean;
   width?: number | string;
   height?: number | string;
 }
 
-export function Stage({ scene = 'Auto', unknown = false, side = 'left', width = '100%', height = '100%' }: StageProps) {
+export function Stage({ scene = 'Auto', unknown = false, side = 'left', props = true, width = '100%', height = '100%' }: StageProps) {
   const key = unknown ? 'unknown' : scene;
   const right = side === 'right';
   const cloudX = right ? 116 : 44;
@@ -35,7 +41,7 @@ export function Stage({ scene = 'Auto', unknown = false, side = 'left', width = 
       <Rect x={0} y={150} width={180} height={66} fill="#B7CD86" />
       <Path d="M0 150 L180 150" stroke="#9FB86D" strokeWidth={2} />
 
-      {key === 'Auto' && (
+      {props && key === 'Auto' && (
         <G stroke="#52715A" strokeWidth={3} strokeLinecap="round" fill="none">
           <Path d="M18 150 L14 138 M24 150 L24 136 M30 150 L34 139" />
           <Path d="M150 150 L146 140 M158 150 L158 134 M166 150 L170 141" />
@@ -43,7 +49,7 @@ export function Stage({ scene = 'Auto', unknown = false, side = 'left', width = 
         </G>
       )}
 
-      {key === 'Desk nest' && (
+      {props && key === 'Desk nest' && (
         <G>
           <Rect x={6} y={124} width={168} height={9} rx={4} fill="#C07A62" stroke={INK} strokeWidth={2.6} />
           <Path d="M20 133 L20 158 M160 133 L160 158" stroke={INK} strokeWidth={5} strokeLinecap="round" />
@@ -54,7 +60,7 @@ export function Stage({ scene = 'Auto', unknown = false, side = 'left', width = 
         </G>
       )}
 
-      {key === 'Couch mode' && (
+      {props && key === 'Couch mode' && (
         <G>
           <Rect x={8} y={96} width={164} height={60} rx={20} fill="#CEC5ED" stroke={INK} strokeWidth={2.8} />
           <Rect x={8} y={122} width={30} height={38} rx={14} fill="#B7ADD9" stroke={INK} strokeWidth={2.8} />
@@ -63,7 +69,7 @@ export function Stage({ scene = 'Auto', unknown = false, side = 'left', width = 
         </G>
       )}
 
-      {key === 'Outdoors' && (
+      {props && key === 'Outdoors' && (
         <G>
           <Path d="M22 150 L22 116" stroke="#7C5540" strokeWidth={9} strokeLinecap="round" />
           <Circle cx={22} cy={102} r={20} fill="#52715A" />
@@ -74,7 +80,7 @@ export function Stage({ scene = 'Auto', unknown = false, side = 'left', width = 
         </G>
       )}
 
-      {key === 'Café' && (
+      {props && key === 'Café' && (
         <G>
           <Rect x={122} y={126} width={56} height={8} rx={4} fill="#FFFDF8" stroke={INK} strokeWidth={2.6} />
           <Path d="M150 134 L150 158" stroke={INK} strokeWidth={5} strokeLinecap="round" />
@@ -89,7 +95,7 @@ export function Stage({ scene = 'Auto', unknown = false, side = 'left', width = 
         </G>
       )}
 
-      {key === 'Blanket fort' && (
+      {props && key === 'Blanket fort' && (
         <G>
           <Path d="M-6 150 Q30 60 90 46 Q150 60 186 150 Z" fill="#F2B38F" stroke={INK} strokeWidth={2.8} strokeLinejoin="round" />
           <Path d="M-6 150 Q30 60 90 46" fill="none" stroke="#E09A72" strokeWidth={6} />
@@ -99,7 +105,7 @@ export function Stage({ scene = 'Auto', unknown = false, side = 'left', width = 
         </G>
       )}
 
-      {key === 'unknown' && (
+      {props && key === 'unknown' && (
         <G fill="#52715A" opacity={0.35}>
           <Circle cx={34} cy={120} r={3} />
           <Circle cx={90} cy={112} r={3} />

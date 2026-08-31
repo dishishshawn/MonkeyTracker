@@ -189,6 +189,34 @@ Calm face). Its decor set is generic (stack, lamp, mug, rug, window) rather than
 this app's four, so only `Plant` is exact — `String lights`, `Poster` and
 `Plushie` borrow the nearest shape. Both are worth a follow-up design pass.
 
+Two features from `PRD-NEXT.txt` are built. Idle life (section 3) gives the
+figure continuous breathing and blinking driven only by inputs that change
+without anyone acting; it runs on the same native-driver transform as the poke
+and reaction animations, so it never re-renders the SVG. Drowsiness after 22:00
+applies to the viewer's own monkey only, because partner timezone sharing does
+not exist yet and a partner's monkey settling on our clock would be a claim
+about their night we cannot substantiate. Both animation gates fail open: a
+missing or throwing reduce-motion implementation, and any app state other than
+`background`, are treated as "animate". The strict version froze the stage
+outright on web. Low power mode is NOT yet honoured; it needs `expo-battery`.
+
+Combination states (section 5) pair the two panels. A shared scene draws the
+scene props once, so the halves read as one continuous world instead of the
+same picture twice; a shared activity steps both monkeys 16px toward each
+other. `combinationState` is pure and tested, including that expiry ends a
+combination immediately — a pair state that outlives a participant would imply
+presence the product knows is gone. Combinations are emergent by design: never
+announced, never named in copy, and never pairing on mood or accessory, since
+anything a user could deliberately match on becomes pressure to match.
+
+Both were verified in the browser by DOM measurement rather than screenshots,
+which is the only way several of these bugs were visible: a visible tab
+breathes and blinks while a hidden one is completely static, and with both
+partners on Café the right panel drops to seven elements (sky, hills, horizon)
+against the left panel's eighteen. Note that react-native-web compiles static
+StyleSheet entries to CSS classes, so `element.style.transform` shows only
+Animated values — use `getComputedStyle` when checking layout styles.
+
 `npm audit --omit=dev` currently reports 10 moderate advisories inherited
 through Expo tooling and its `xcode`/`uuid` chain, with no high or critical
 findings. npm's suggested automatic resolution is an incompatible Expo
