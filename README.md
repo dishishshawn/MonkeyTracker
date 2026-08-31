@@ -13,6 +13,10 @@ Release 0 mobile prototype for the private presence-sharing app described in [`P
 - Expanded activities, moods, rooms, and monkey poses behind compact horizontal selectors
 - Hidden, Perch, Nearby, and Trail sharing choices with explicit Trail disclosure
 - Realtime reactions and pokes delivered privately to the paired monkey
+- Animated reaction bursts and poke nudges on the recipient’s monkey
+- Four built-in quick scenes plus up to six saved custom presets
+- Status accessories, room decorations, and activity-driven stage details
+- Private 5 MB photo postcards stored behind troop-scoped access policies
 - Privacy controls with a global location kill switch and private notification previews
 - Persistent onboarding, privacy preferences, and current status across reloads
 - Real 30-day Monkey Business timeline with save and delete controls

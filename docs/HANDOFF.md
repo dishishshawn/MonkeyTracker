@@ -30,6 +30,11 @@ Implemented:
 - Hidden, Perch, Nearby, and Trail sharing modes with explicit Trail disclosure.
 - Realtime reactions and pokes delivered to the recipient’s own monkey, plus
   persistent privacy controls.
+- Animated reaction bursts and poke nudges, activity-driven stage details,
+  per-status accessories, and shared room decorations.
+- Four built-in quick scenes and up to six locally persisted custom presets.
+- Optional private photo postcards selected through Expo Image Picker and
+  delivered through one-hour signed URLs from a troop-scoped Storage bucket.
 - AsyncStorage persistence for pairing, profile, preferences, current status,
   and timeline across reloads.
 - Real local history with 30-day retention plus save and delete controls.
@@ -47,6 +52,8 @@ Implemented:
   compatibility for the brief combined `blue-pink` appearance value.
 - A `monkey_interactions` migration with recipient-scoped RLS and Realtime
   delivery for reactions and pokes.
+- A status-personality/postcard migration adding constrained accessory and room
+  fields plus private Storage object policies.
 - A cleanup-safe hosted RLS verification script for paired, unrelated, and
   former-member access boundaries.
 

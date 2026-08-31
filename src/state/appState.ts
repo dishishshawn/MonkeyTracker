@@ -1,5 +1,5 @@
 import { createInitialUpdate, enforceLocationPreference, pruneTimeline } from '../domain/updates';
-import { MonkeyUpdate, PersistedAppState, Profile, TimelineEntry } from '../types';
+import { MonkeyUpdate, PersistedAppState, Profile, QuickPreset, TimelineEntry } from '../types';
 
 export type AppAction =
   | { type: 'hydrate'; state: PersistedAppState }
@@ -9,6 +9,7 @@ export type AppAction =
   | { type: 'setNotificationsPrivate'; enabled: boolean }
   | { type: 'deleteTimelineEntry'; id: string }
   | { type: 'toggleSaved'; id: string }
+  | { type: 'saveQuickPreset'; preset: QuickPreset }
   | { type: 'syncRemote'; currentUpdate: MonkeyUpdate; timeline: TimelineEntry[] }
   | { type: 'leaveTroop'; now: string };
 
@@ -19,6 +20,7 @@ export function createInitialAppState(now = new Date()): PersistedAppState {
     profile: { name: 'You', accent: '#996744', skin: '#EBC6A6' },
     currentUpdate: createInitialUpdate(now),
     timeline: [],
+    quickPresets: [],
     preferences: {
       locationEnabled: false,
       notificationsPrivate: true,
@@ -56,6 +58,11 @@ export function appReducer(state: PersistedAppState, action: AppAction): Persist
       return {
         ...state,
         timeline: state.timeline.map((entry) => entry.id === action.id ? { ...entry, saved: !entry.saved } : entry),
+      };
+    case 'saveQuickPreset':
+      return {
+        ...state,
+        quickPresets: [action.preset, ...state.quickPresets.filter((preset) => preset.name.toLowerCase() !== action.preset.name.toLowerCase())].slice(0, 6),
       };
     case 'syncRemote':
       return {

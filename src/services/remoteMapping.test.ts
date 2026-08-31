@@ -16,6 +16,9 @@ const row: RemoteUpdate = {
   expiration: '1 hour',
   scene: 'Desk nest',
   pose: 'Locked in',
+  accessory: 'Glasses',
+  room_decor: 'Plant',
+  photo_path: null,
   updated_at: '2026-08-26T12:00:00.000Z',
   expires_at: '2026-08-26T13:00:00.000Z',
   created_at: '2026-08-26T12:00:00.000Z',
@@ -27,6 +30,7 @@ describe('remote update mapping', () => {
     expect(entry?.id).toBe('update-one');
     expect(entry?.update.updatedAt).toBe(row.updated_at);
     expect(entry?.update.locationLevel).toBe('Hidden');
+    expect(entry?.update.accessory).toBe('Glasses');
   });
 
   it('uses an expired unknown state when the server has no active update', () => {

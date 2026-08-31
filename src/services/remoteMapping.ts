@@ -13,6 +13,10 @@ export function fromRemoteUpdate(row: RemoteUpdate): MonkeyUpdate {
     expiration: row.expiration as MonkeyUpdate['expiration'],
     scene: row.scene as MonkeyUpdate['scene'],
     pose: row.pose as MonkeyUpdate['pose'],
+    accessory: (row.accessory ?? 'None') as MonkeyUpdate['accessory'],
+    roomDecor: (row.room_decor ?? 'None') as MonkeyUpdate['roomDecor'],
+    photoUri: row.photo_url ?? '',
+    photoPath: row.photo_path ?? '',
     updatedAt: row.updated_at,
   };
 }

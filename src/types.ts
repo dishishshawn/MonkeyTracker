@@ -5,6 +5,8 @@ export type LocationLevel = 'Hidden' | 'Perch' | 'Nearby' | 'Trail';
 export type Expiration = '15 min' | '30 min' | '1 hour' | '2 hours' | '4 hours' | '8 hours' | 'End of day';
 export type Scene = 'Auto' | 'Desk nest' | 'Couch mode' | 'Outdoors' | 'Café' | 'Blanket fort';
 export type Pose = 'Auto' | 'Waving' | 'Locked in' | 'Flopped' | 'Victory';
+export type Accessory = 'None' | 'Glasses' | 'Beanie' | 'Crown' | 'Flower';
+export type RoomDecor = 'None' | 'Plant' | 'String lights' | 'Poster' | 'Plushie';
 
 export interface MonkeyUpdate {
   activity: Activity;
@@ -16,7 +18,21 @@ export interface MonkeyUpdate {
   expiration: Expiration;
   scene: Scene;
   pose: Pose;
+  accessory: Accessory;
+  roomDecor: RoomDecor;
+  photoUri: string;
+  photoPath: string;
   updatedAt: string;
+}
+
+export interface QuickPreset {
+  id: string;
+  name: string;
+  activity: Activity;
+  mood: Mood;
+  availability: Availability;
+  scene: Scene;
+  pose: Pose;
 }
 
 export interface Profile {
@@ -43,6 +59,7 @@ export interface PersistedAppState {
   profile: Profile;
   currentUpdate: MonkeyUpdate;
   timeline: TimelineEntry[];
+  quickPresets: QuickPreset[];
   preferences: PrivacyPreferences;
 }
 

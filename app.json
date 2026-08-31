@@ -22,6 +22,15 @@
     },
     "web": {
       "bundler": "metro"
-    }
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Monkey Tracker uses a photo only when you choose to send a private postcard to your paired monkey.",
+          "cameraPermission": false
+        }
+      ]
+    ]
   }
 }
