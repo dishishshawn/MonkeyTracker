@@ -19,5 +19,9 @@
       "cardMode": "column"
     }
   },
-  "readmeHeader": ".design-sync/conventions.md"
+  "readmeHeader": ".design-sync/conventions.md",
+  "projectId": "f4cf46ec-d2e1-4b8c-ad58-7d9bf9b27c28",
+  "guidelinesGlob": [
+    "docs/guides/**/*.md"
+  ]
 }

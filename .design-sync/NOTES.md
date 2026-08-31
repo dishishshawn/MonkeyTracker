@@ -65,3 +65,12 @@ Deliberately excluded, because they need AsyncStorage, Supabase, `Alert`,
   there again.
 - Only three components are synced. If the app grows genuinely reusable
   primitives, add them to `entry.tsx` AND `cfg.componentSrcMap`.
+
+## Guidelines exclusion
+
+`cfg.guidelinesGlob` is pinned to `docs/guides/**/*.md` (which does not exist)
+on purpose. The default glob includes `docs/*.md`, which swept `docs/BACKEND.md`
+and `docs/HANDOFF.md` into `guidelines/` — Supabase setup (project reference,
+region, deploy procedure) and engineering handoff state. Neither is design
+guidance and neither belongs in a design-system project. If real design
+guidelines are ever written, put them in `docs/guides/`.
