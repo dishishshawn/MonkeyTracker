@@ -71,6 +71,32 @@ export async function loadMyProfile(): Promise<RemoteProfile | null> {
   return data as RemoteProfile | null;
 }
 
+export async function loadPartnerProfile(troopId: string): Promise<RemoteProfile | null> {
+  const client = requireSupabase();
+  const { data: authData, error: authError } = await client.auth.getUser();
+  if (authError) throw authError;
+  if (!authData.user) return null;
+
+  const { data: members, error: memberError } = await client
+    .from('troop_members')
+    .select('user_id')
+    .eq('troop_id', troopId)
+    .is('left_at', null)
+    .neq('user_id', authData.user.id)
+    .limit(1);
+  if (memberError) throw memberError;
+  const partnerId = members?.[0]?.user_id;
+  if (!partnerId) return null;
+
+  const { data, error } = await client
+    .from('profiles')
+    .select('id, display_name, avatar_accent, avatar_skin')
+    .eq('id', partnerId)
+    .maybeSingle();
+  if (error) throw error;
+  return data as RemoteProfile | null;
+}
+
 export async function loadActiveTroop(): Promise<ActiveTroop | null> {
   const client = requireSupabase();
   const { data: authData, error: authError } = await client.auth.getUser();
