@@ -27,6 +27,8 @@ export function HomeScreen({ profile, partner, update, expired, reaction, timeli
   const latest = timeline[0];
   const partnerAccent = partner?.accent ?? '#7C5540';
   const partnerSkin = partner?.skin;
+  const partnerName = partner?.name || 'Your monkey';
+  const partnerPossessive = partnerName.endsWith('s') ? `${partnerName}’ little world` : `${partnerName}’s little world`;
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <StatusBar style="dark" />
@@ -40,12 +42,12 @@ export function HomeScreen({ profile, partner, update, expired, reaction, timeli
           <View style={styles.sun} /><View style={styles.cloudOne} /><View style={styles.cloudTwo} /><View style={styles.branch} />
           <View style={styles.stagePeople}>
             <View style={styles.monkeySlot}><MonkeyAvatar activity="Chilling" accent={profile.accent} skin={profile.skin} /><Text style={styles.monkeyName}>{profile.name}</Text><Text style={styles.monkeyMeta}>Chilling · cozy</Text></View>
-            <View style={styles.monkeySlot}>{reaction && <Text style={styles.reactionBubble}>{reaction}</Text>}<MonkeyAvatar activity={update.activity} accent={partnerAccent} pose={update.pose} skin={partnerSkin} /><Text style={styles.monkeyName}>Your monkey</Text><Text style={styles.monkeyMeta}>{expired ? 'Status unknown' : `${update.activity} · ${update.mood.toLowerCase()}`}</Text></View>
+            <View style={styles.monkeySlot}>{reaction && <Text style={styles.reactionBubble}>{reaction}</Text>}<MonkeyAvatar activity={update.activity} accent={partnerAccent} pose={update.pose} skin={partnerSkin} /><Text style={styles.monkeyName}>{partnerName}</Text><Text style={styles.monkeyMeta}>{expired ? 'Status unknown' : `${update.activity} · ${update.mood.toLowerCase()}`}</Text></View>
           </View>
         </View>
         <View style={styles.partnerCard}>
           <View style={styles.cardTopline}>
-            <View style={styles.identity}><MonkeyAvatar activity={update.activity} accent={partnerAccent} size="small" skin={partnerSkin} /><View><Text style={styles.cardName}>Your monkey’s little world</Text><Text style={styles.timestamp}>{formatRelativeAge(update.updatedAt)} · manual</Text></View></View>
+            <View style={styles.identity}><MonkeyAvatar activity={update.activity} accent={partnerAccent} size="small" skin={partnerSkin} /><View><Text style={styles.cardName}>{partnerPossessive}</Text><Text style={styles.timestamp}>{formatRelativeAge(update.updatedAt)} · manual</Text></View></View>
             <View style={styles.precisionBadge}><Text style={styles.precisionText}>{expired ? 'Expired' : update.locationLevel}</Text></View>
           </View>
           <Text style={styles.place}>{expired ? 'Current status unknown' : placeLabel(update)}</Text>
