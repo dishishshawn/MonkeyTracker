@@ -16,6 +16,9 @@ import {
   loadMyCurrentRemoteUpdates,
   loadRemoteTimeline,
   publishRemoteUpdate,
+  PokeLimitReachedError,
+  DAILY_POKE_LIMIT,
+  remainingPokes,
   sendTroopInteraction,
   subscribeToTroopInteractions,
   subscribeToTroopUpdates,
@@ -217,8 +220,14 @@ function AppContent() {
             const recipientId = cloud.partnerProfile?.id;
             if (!troopId || !recipientId) return notify('Your monkey is not connected yet.');
             void sendTroopInteraction(troopId, recipientId, 'poke')
-              .then(() => notify('Poke sent. Do not abuse your power.'))
-              .catch(() => notify('That poke fell out of the tree. Try again.'));
+              .then(async () => {
+                // Showing what is left keeps the cap from arriving as a wall.
+                const left = await remainingPokes().catch(() => null);
+                notify(left === null ? 'Poke sent. Do not abuse your power.' : `Poke sent. ${left} left today.`);
+              })
+              .catch((error) => notify(error instanceof PokeLimitReachedError
+                ? `That is ${DAILY_POKE_LIMIT} pokes today. Your monkey has earned some peace.`
+                : 'That poke fell out of the tree. Try again.'));
           }}
           onOpenComposer={openComposer}
           onOpenHistory={() => setActiveScreen('history')}

@@ -220,6 +220,17 @@ async function attachSignedPhotoUrls(rows: RemoteUpdate[]): Promise<RemoteUpdate
   }));
 }
 
+/** Mirrors the rolling-24-hour cap enforced by the interaction insert policy. */
+export const DAILY_POKE_LIMIT = 3;
+
+/** The one insert policy a paired member can realistically trip on a poke. */
+export class PokeLimitReachedError extends Error {
+  constructor() {
+    super('Daily poke limit reached.');
+    this.name = 'PokeLimitReachedError';
+  }
+}
+
 export async function sendTroopInteraction(troopId: string, recipientId: string, kind: RemoteInteraction['kind'], reaction?: string): Promise<void> {
   const { error } = await requireSupabase().from('monkey_interactions').insert({
     troop_id: troopId,
@@ -227,7 +238,16 @@ export async function sendTroopInteraction(troopId: string, recipientId: string,
     kind,
     reaction: kind === 'reaction' ? reaction : null,
   });
+  if (!error) return;
+  if (kind === 'poke' && error.code === '42501') throw new PokeLimitReachedError();
+  throw error;
+}
+
+/** Pokes still available in the rolling window, for callers that want to show it. */
+export async function remainingPokes(): Promise<number> {
+  const { data, error } = await requireSupabase().rpc('pokes_sent_recently');
   if (error) throw error;
+  return Math.max(0, DAILY_POKE_LIMIT - (typeof data === 'number' ? data : 0));
 }
 
 export async function deleteRemoteUpdate(updateId: string): Promise<void> {

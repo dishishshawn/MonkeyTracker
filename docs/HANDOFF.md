@@ -61,7 +61,13 @@ Implemented:
 - A status-personality/postcard migration adding constrained accessory and room
   fields plus private Storage object policies.
 - A cleanup-safe hosted RLS verification script for paired, unrelated, and
-  former-member access boundaries.
+  former-member access boundaries, now also covering the daily poke limit.
+- A retention migration adding `public.purge_expired_monkey_data()`, a daily
+  pg_cron schedule for it, and a three-per-rolling-24-hours poke cap enforced by
+  the interaction insert policy through `public.pokes_sent_recently()`.
+- `npm run backend:purge-postcards`, a service-role job that removes postcard
+  objects no surviving update references, with a dry-run mode and a refusal to
+  act when it reads objects but no references at all.
 
 The source of truth for intended product behavior is `PRD.txt`. If this summary
 conflicts with it, preserve the PRD guardrails and resolve the discrepancy.
@@ -117,8 +123,12 @@ can contain a caption or a place.
 interactions, private postcard access, outsider isolation, and post-unpair
 revocation using temporary users deleted in `finally`; it was updated but not
 rerun after the latest two migrations because a service-role key was not placed
-in this workspace. There are no component, full UI end-to-end, or
-native-notification tests yet. The newest Android export was not rerun after
+in this workspace. The retention/poke migration and the postcard purge job were
+written but never executed: `backend:push`, `backend:lint`, and
+`backend:verify-hosted` all need credentials this workspace does not hold, so
+the SQL has not been parsed by a real Postgres and the purge job has not talked
+to a real bucket. Treat both as unverified until item 2 below runs. There are no
+component, full UI end-to-end, or native-notification tests yet. The newest Android export was not rerun after
 adding Expo Image Picker or Expo Notifications.
 
 The notification work was exercised only through the pure planner tests and a
@@ -138,17 +148,19 @@ downgrade, so it was not applied.
 1. Manually regression-test the two-account browser flow: self/partner status,
    signed postcard upload/display/removal, saved quick scenes, accessories,
    décor, reaction bursts, and poke nudges.
-2. Run `backend:verify-hosted` with a temporary service-role key and rerun the
-   Android export/device smoke test after the Image Picker addition.
+2. Run `backend:push` for the retention/poke migration, then
+   `backend:lint`, `backend:verify-hosted` (which now asserts the poke cap), and
+   `backend:purge-postcards -- --dry-run`, all with a temporary service-role key.
+   Confirm `cron.job` actually holds `monkey-retention-purge`; the migration
+   downgrades a pg_cron failure to a notice, so a missing schedule is silent.
+   Rerun the Android export/device smoke test after the Image Picker addition.
 3. Run the notification flow on a device: confirm the Android `monkey-status`
    channel, the permission prompt on first publish, a delivered Trail warning
    and Trail-end pair, and that a denied permission degrades silently.
-4. Add a scheduled database purge for expired updates, interactions, and
-   orphaned postcard objects.
-5. Add component and full UI account/pairing tests around the hosted adapter.
-6. Add real permission-gated Perch/location services only after device privacy
+4. Add component and full UI account/pairing tests around the hosted adapter.
+5. Add real permission-gated Perch/location services only after device privacy
    and battery testing.
-7. Configure production SMTP, abuse controls, deletion/export flows, and a
+6. Configure production SMTP, abuse controls, deletion/export flows, and a
    separate production Supabase organization before inviting broader testers.
 
 ## Environment notes

@@ -130,6 +130,25 @@ try {
   if (receivedInteractionError) throw receivedInteractionError;
   assert(receivedInteraction?.id === interaction.id, 'A reaction did not reach its paired recipient.');
 
+  for (let poke = 1; poke <= 3; poke += 1) {
+    const { error: pokeError } = await partner
+      .from('monkey_interactions')
+      .insert({ troop_id: troopId, recipient_id: alphaId, kind: 'poke' });
+    assert(!pokeError, `Poke ${poke} of the allowed three was rejected: ${pokeError?.message}.`);
+  }
+  const { error: fourthPokeError } = await partner
+    .from('monkey_interactions')
+    .insert({ troop_id: troopId, recipient_id: alphaId, kind: 'poke' });
+  assert(fourthPokeError, 'A fourth poke within 24 hours was accepted.');
+  const { data: pokesSent, error: pokeCountError } = await partner.rpc('pokes_sent_recently');
+  if (pokeCountError) throw pokeCountError;
+  assert(pokesSent === 3, `pokes_sent_recently reported ${pokesSent} instead of 3.`);
+
+  const { error: limitedReactionError } = await partner
+    .from('monkey_interactions')
+    .insert({ troop_id: troopId, recipient_id: alphaId, kind: 'reaction', reaction: '♡' });
+  assert(!limitedReactionError, 'The poke limit also blocked a reaction.');
+
   const { data: outsiderRead, error: outsiderUpdateReadError } = await outsider
     .from('monkey_updates')
     .select('id')
@@ -166,7 +185,7 @@ try {
   if (formerMemberReadError) throw formerMemberReadError;
   assert(formerMemberRead.length === 0, 'A former member retained access after the troop ended.');
 
-  console.log('Hosted verification passed: appearance, status personality, private postcards, pair sync, interactions, outsider isolation, and post-unpair revocation.');
+  console.log('Hosted verification passed: appearance, status personality, private postcards, pair sync, interactions, the daily poke limit, outsider isolation, and post-unpair revocation.');
 } finally {
   const cleanupErrors = [];
   if (postcardPath) {
