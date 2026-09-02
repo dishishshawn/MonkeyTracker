@@ -42,6 +42,9 @@ export function HomeScreen({ profile, partner, ownUpdate, update, ownExpired, ex
   // Own clock only — see the note in idleRules.ts. The partner's monkey gets
   // idle motion but never settles, because we do not know their night yet.
   const ownDrowsy = isDrowsyHour(new Date().getHours());
+  // An account that has never posted is not the same as one whose status aged
+  // out; both are unknown, but only the second had a status to lose.
+  const ownLabel = timeline.some((entry) => entry.mine) ? 'Status unknown' : 'No status yet';
   // Emergent only: never announced, never named in copy, never suggested.
   const combo = combinationState(ownUpdate, update, ownExpired, expired);
   return (
@@ -62,7 +65,7 @@ export function HomeScreen({ profile, partner, ownUpdate, update, ownExpired, ex
             <View style={styles.roomDecor}><Mark glyph={decorGlyph[update.roomDecor]} color={colors.mossDark} size={22} /></View>
           )}
           <View style={styles.stagePeople}>
-            <View style={[styles.monkeySlot, combo.sharedActivity && styles.monkeySlotTogetherLeft]}>{incomingCue && <InteractionBurst cue={incomingCue} kind={incomingKind} />}<MonkeyAvatar accessory={ownUpdate.accessory} activity={ownUpdate.activity} accent={profile.accent} animation={incomingKind ?? undefined} animationKey={incomingKey ?? undefined} drowsy={ownDrowsy} mood={ownUpdate.mood} pose={ownUpdate.pose} skin={profile.skin} unknown={ownExpired} /><Text style={styles.monkeyName}>{profile.name}</Text><Text style={styles.monkeyMeta}>{ownExpired ? 'Status unknown' : `${ownUpdate.activity} · ${ownUpdate.mood.toLowerCase()}`}</Text></View>
+            <View style={[styles.monkeySlot, combo.sharedActivity && styles.monkeySlotTogetherLeft]}>{incomingCue && <InteractionBurst cue={incomingCue} kind={incomingKind} />}<MonkeyAvatar accessory={ownUpdate.accessory} activity={ownUpdate.activity} accent={profile.accent} animation={incomingKind ?? undefined} animationKey={incomingKey ?? undefined} drowsy={ownDrowsy} mood={ownUpdate.mood} pose={ownUpdate.pose} skin={profile.skin} unknown={ownExpired} /><Text style={styles.monkeyName}>{profile.name}</Text><Text style={styles.monkeyMeta}>{ownExpired ? ownLabel : `${ownUpdate.activity} · ${ownUpdate.mood.toLowerCase()}`}</Text></View>
             <View style={[styles.monkeySlot, combo.sharedActivity && styles.monkeySlotTogetherRight]}><MonkeyAvatar accessory={update.accessory} activity={update.activity} accent={partnerAccent} mood={update.mood} pose={update.pose} skin={partnerSkin} unknown={expired} /><Text style={styles.monkeyName}>{partnerName}</Text><Text style={styles.monkeyMeta}>{expired ? 'Status unknown' : `${update.activity} · ${update.mood.toLowerCase()}`}</Text></View>
           </View>
         </View>
@@ -73,7 +76,7 @@ export function HomeScreen({ profile, partner, ownUpdate, update, ownExpired, ex
           </View>
           <Text style={styles.place}>{expired ? 'Current status unknown' : placeLabel(update)}</Text>
           <Text style={styles.caption}>{expired ? 'This update expired and is no longer presented as current.' : update.caption || `${update.activity}, no further monkey business reported.`}</Text>
-          {!expired && update.photoUri && <View style={styles.postcard}><Image source={{ uri: update.photoUri }} style={styles.postcardPhoto} /><Text style={styles.postcardLabel}>A tiny postcard from {partnerName}</Text></View>}
+          {!expired && Boolean(update.photoUri) && <View style={styles.postcard}><Image source={{ uri: update.photoUri }} style={styles.postcardPhoto} /><Text style={styles.postcardLabel}>A tiny postcard from {partnerName}</Text></View>}
           <View style={styles.detailsRow}>
             <View style={styles.detailPill}>{!expired && <Mark glyph={moodGlyph[update.mood]} color={colors.ink} size={15} />}<Text style={styles.detailPillText}>{expired ? 'Unknown' : update.mood}</Text></View>
             <View style={styles.detailPill}>{!expired && <Mark glyph={availabilityGlyph[update.availability]} color={colors.ink} size={15} />}<Text style={styles.detailPillText}>{expired ? 'Unknown' : update.availability}</Text></View>

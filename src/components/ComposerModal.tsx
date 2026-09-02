@@ -71,7 +71,7 @@ export function ComposerModal({ accent, skin, draft, locationEnabled, open, quic
             <TextInput accessibilityLabel="Update caption" maxLength={140} multiline onChangeText={(text) => set('caption', text)} placeholder="Narrate the monkey business…" placeholderTextColor={colors.muted} style={styles.input} value={draft.caption} />
             <View style={styles.postcardCard}>
               <View style={styles.postcardHeading}><View><Text style={styles.fieldLabel}>Photo postcard</Text><Text style={styles.postcardNote}>Private to this troop · 5 MB max</Text></View><Pressable onPress={() => void pickPhoto()} style={styles.photoButton}><Text style={styles.photoButtonText}>{draft.photoUri ? 'Replace' : 'Choose photo'}</Text></Pressable></View>
-              {draft.photoUri && <><Image source={{ uri: draft.photoUri }} style={styles.postcardImage} /><Pressable onPress={() => onChange({ ...draft, photoUri: '', photoPath: '' })}><Text style={styles.removePhoto}>Remove postcard</Text></Pressable></>}
+              {Boolean(draft.photoUri) && <><Image source={{ uri: draft.photoUri }} style={styles.postcardImage} /><Pressable onPress={() => onChange({ ...draft, photoUri: '', photoPath: '' })}><Text style={styles.removePhoto}>Remove postcard</Text></Pressable></>}
               {photoError && <Text style={styles.photoError}>{photoError}</Text>}
             </View>
             <Picker label="Location precision" items={locationEnabled ? locationLevels : ['Hidden']} value={draft.locationLevel} onChange={(value) => {

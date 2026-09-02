@@ -175,11 +175,25 @@ grammar with a shared horizon at y=150 so two different scenes can butt
 together mid-card), and `Mark` (24 glyphs at one ink weight: availability,
 location precision, mood, decor). They render through `react-native-svg`.
 
-The expired state is drawn, not faded: the figure keeps full posture, size and
-ink line, and only the color fields empty to paper, with three soft dots
-overhead. Nothing dims, greys, or slumps. `HomeScreen` passes `unknown` to the
-stage, the stage avatar AND the partner-card avatar, so an expired status never
-shows stale color anywhere.
+The unknown state is drawn, not faded: the figure keeps full posture, size and
+ink line, and nothing dims, greys, or slumps. `HomeScreen` passes `unknown` to
+the stage, the stage avatar AND the partner-card avatar.
+
+That state no longer drains the fur and face to paper. Appearance is identity,
+not status, so emptying it read as a rendering fault rather than as a signal —
+a new account saw a white monkey and assumed the app was broken. The signal is
+now a rotating ring above the head, drawn in `MonkeyAvatar` as a native-driver
+overlay so the SVG underneath never re-renders; the three soft dots it replaces
+are gone. `unknown` still suppresses the activity, accessory and pose, so no
+stale status detail survives — only the colors do.
+
+A brand-new account is seeded at epoch (`createInitialAppState`), matching the
+idiom `App.tsx` and `remoteMapping` already used for an absent partner update,
+so it reads as unknown instead of being handed a status it never wrote. The
+seed previously carried invented content — a `Studying` / `Crispy` status
+captioned "Fighting for my life with electromagnetics" at "The library" — which
+also pre-filled the composer. `HomeScreen` distinguishes the two unknowns:
+"No status yet" before the first post, "Status unknown" after one expires.
 
 Two mapping gaps the illustration system did not cover, both approximated in
 `src/illustration/marks.ts`: it shipped `Fizzy` and `Melted` moods, which this

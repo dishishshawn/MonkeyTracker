@@ -90,10 +90,11 @@ export function Monkey({
   const eye: Eye = blink || (activity === 'Sleeping' && !unknown) ? 'closed' : face[0];
   const mouth: Mouth = face[1];
 
-  // Unknown empties the color fields to paper but keeps every line at full weight.
-  const furC = unknown ? '#FFFDF8' : furBase;
-  const skinC = unknown ? '#FFFDF8' : skinBase;
-  const shadeC = unknown ? '#EFE7D6' : (SHADE[furBase] ?? '#7E5236');
+  // Appearance is identity, not status, so an unknown status keeps its colors.
+  // The pending ring in MonkeyAvatar carries the "we do not know" signal instead.
+  const furC = furBase;
+  const skinC = skinBase;
+  const shadeC = SHADE[furBase] ?? '#7E5236';
   const cheekC = CHEEK[skinBase] ?? '#D98E82';
   const act = (name: Activity) => showActivity && activity === name;
 
@@ -346,13 +347,6 @@ export function Monkey({
         </G>
       )}
 
-      {unknown && !bust && (
-        <G>
-          <Circle cx={46} cy={16} r={3} fill={colors.moss} opacity={0.55} />
-          <Circle cx={60} cy={12} r={3} fill={colors.moss} opacity={0.55} />
-          <Circle cx={74} cy={16} r={3} fill={colors.moss} opacity={0.55} />
-        </G>
-      )}
     </Svg>
   );
 }

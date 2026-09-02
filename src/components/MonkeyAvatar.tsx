@@ -1,8 +1,10 @@
-import { Animated, StyleSheet } from 'react-native';
+import { Animated, Easing, StyleSheet } from 'react-native';
 import { useEffect, useRef } from 'react';
+import Svg, { Circle } from 'react-native-svg';
 import { Accessory, Activity, Mood, Pose } from '../types';
 import { defaultSkinForAccent, monkeyFurFor, monkeySkinFor } from '../ui/monkeyColorways';
 import { Monkey } from '../illustration/Monkey';
+import { colors } from '../theme';
 import { useIdleLife } from '../illustration/useIdleLife';
 
 interface MonkeyAvatarProps {
@@ -28,10 +30,23 @@ export function MonkeyAvatar({ activity, accent, skin, size = 'large', pose = 'A
   const nudge = useRef(new Animated.Value(0)).current;
   const bounce = useRef(new Animated.Value(0)).current;
   const { breath, blinking } = useIdleLife({ unknown, drowsy });
+  const spin = useRef(new Animated.Value(0)).current;
   // Breathing rides the same native-driver transform as the poke and reaction
   // animations, so idle motion never re-renders the SVG underneath it.
   const breathLift = breath.interpolate({ inputRange: [0, 1], outputRange: [0, unknown ? -1 : -1.6] });
   const breathScale = breath.interpolate({ inputRange: [0, 1], outputRange: [1, 1.008] });
+
+  // The pending ring only turns while the status is unknown, so a known monkey
+  // runs no timer at all.
+  useEffect(() => {
+    if (!unknown) return;
+    spin.setValue(0);
+    const loop = Animated.loop(
+      Animated.timing(spin, { toValue: 1, duration: 1100, easing: Easing.linear, useNativeDriver: true }),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [spin, unknown]);
 
   useEffect(() => {
     if (!animation || !animationKey) return;
@@ -67,11 +82,25 @@ export function MonkeyAvatar({ activity, accent, skin, size = 'large', pose = 'A
         skin={face.id}
         unknown={unknown}
       />
+      {unknown && (
+        <Animated.View
+          style={[styles.pending, compact && styles.pendingSmall, { transform: [{ rotate: spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) }] }]}
+        >
+          <Svg viewBox="0 0 16 16" width="100%" height="100%">
+            <Circle cx={8} cy={8} r={6} fill="none" stroke={colors.line} strokeWidth={2.2} />
+            <Circle cx={8} cy={8} r={6} fill="none" stroke={colors.moss} strokeWidth={2.2} strokeLinecap="round" strokeDasharray={`${RING * 0.28} ${RING}`} />
+          </Svg>
+        </Animated.View>
+      )}
     </Animated.View>
   );
 }
 
+const RING = 2 * Math.PI * 6;
+
 const styles = StyleSheet.create({
   wrap: { width: 124, height: 126, alignItems: 'center', justifyContent: 'center' },
   wrapSmall: { width: 54, height: 54 },
+  pending: { position: 'absolute', top: 2, width: 18, height: 18, pointerEvents: 'none' },
+  pendingSmall: { top: 0, width: 12, height: 12 },
 });

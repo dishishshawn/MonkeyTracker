@@ -48,12 +48,12 @@ export const TIMELINE_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
 export function createInitialUpdate(now = new Date()): MonkeyUpdate {
   return {
-    activity: 'Studying',
-    mood: 'Crispy',
-    availability: 'Busy',
-    caption: 'Fighting for my life with electromagnetics',
+    activity: 'Chilling',
+    mood: 'Quiet',
+    availability: 'Free',
+    caption: '',
     locationLevel: 'Hidden',
-    place: 'The library',
+    place: '',
     expiration: '2 hours',
     scene: 'Auto',
     pose: 'Auto',

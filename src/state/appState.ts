@@ -14,12 +14,15 @@ export type AppAction =
   | { type: 'syncRemote'; currentUpdate: MonkeyUpdate; timeline: TimelineEntry[] }
   | { type: 'leaveTroop'; now: string };
 
-export function createInitialAppState(now = new Date()): PersistedAppState {
+export function createInitialAppState(_now = new Date()): PersistedAppState {
   return {
     version: 1,
     paired: false,
     profile: { name: 'You', accent: '#996744', skin: '#EBC6A6' },
-    currentUpdate: createInitialUpdate(now),
+    // Epoch, the same idiom App.tsx and remoteMapping use for "no status known":
+    // an account that has never posted reads as unknown rather than being handed
+    // a status it never wrote.
+    currentUpdate: createInitialUpdate(new Date(0)),
     timeline: [],
     quickPresets: [],
     preferences: {
