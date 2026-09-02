@@ -22,7 +22,7 @@ export function PairingSetup({ onComplete }: { onComplete: (profile: Profile, co
       <View style={styles.progressTrack}>
         {[0, 1, 2].map((item) => <View key={item} style={[styles.progressBar, item <= step && styles.progressBarActive]} />)}
       </View>
-      <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
+      <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
         {step === 0 && (
           <>
             <Text style={styles.kicker}>WELCOME TO THE TROOP</Text>

@@ -45,7 +45,7 @@ function CloudAuth({ loading, error, onSignIn, onSignUp }: CloudAccessScreenProp
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={styles.authPage} keyboardShouldPersistTaps="handled">
+      <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.authPage} keyboardShouldPersistTaps="handled">
         <Text style={styles.kicker}>PRIVATE ALPHA</Text>
         <Text style={styles.title}>{mode === 'signup' ? 'Create your treehouse.' : 'Welcome back, monkey.'}</Text>
         <Text style={styles.body}>Your account keeps one private troop synchronized across devices.</Text>
@@ -75,7 +75,7 @@ function CloudPairing({ loading, error, profile, troop, onSignOut, onCreateInvit
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={styles.pairingPage} keyboardShouldPersistTaps="handled">
+      <ScrollView automaticallyAdjustKeyboardInsets contentContainerStyle={styles.pairingPage} keyboardShouldPersistTaps="handled">
         <Text style={styles.kicker}>SIGNED IN AS {profile?.display_name?.toUpperCase() ?? 'A MONKEY'}</Text>
         <Text style={styles.title}>{waiting ? 'Waiting for your person.' : 'Build your troop.'}</Text>
         <Text style={styles.body}>{waiting ? 'Share a fresh private code, then check again after they accept.' : 'Create a code for your partner, or enter the code they sent you.'}</Text>
