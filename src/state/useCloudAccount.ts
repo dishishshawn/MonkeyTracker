@@ -15,6 +15,17 @@ import {
 } from '../services/backend';
 import { isSupabaseConfigured, supabase } from '../services/supabase';
 
+// Supabase returns PostgrestError as a plain object, not an Error subclass, so an
+// `instanceof Error` check alone discards every database message it reports.
+function describeFailure(cause: unknown, fallback: string): string {
+  if (cause instanceof Error && cause.message.trim()) return cause.message;
+  if (typeof cause === 'object' && cause !== null && 'message' in cause) {
+    const { message } = cause as { message?: unknown };
+    if (typeof message === 'string' && message.trim()) return message;
+  }
+  return fallback;
+}
+
 export function useCloudAccount() {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<RemoteProfile | null>(null);
@@ -41,7 +52,7 @@ export function useCloudAccount() {
       setTroop(nextTroop);
       setPartnerProfile(nextTroop?.memberCount && nextTroop.memberCount >= 2 ? await loadPartnerProfile(nextTroop.troopId) : null);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Could not load the cloud account.');
+      setError(describeFailure(cause, 'Could not load the cloud account.'));
     } finally {
       setLoading(false);
     }
@@ -71,7 +82,7 @@ export function useCloudAccount() {
       await refresh();
       return true;
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Supabase could not complete that request.');
+      setError(describeFailure(cause, 'Supabase could not complete that request.'));
       return false;
     } finally {
       setLoading(false);
