@@ -251,14 +251,15 @@ downgrade, so it was not applied.
   cache live under `.tools/` and are intentionally ignored.
 - The hosted repository is `dishishshawn/MonkeyTracker` and is private.
 - The latest feature implementation commit is
-  `4bf8357` (`feat: enforce 30-day retention and the daily poke limit`),
-  preceded by `b039fd0` (`feat: schedule private expiration and Trail
-  reminders`); later commits may update handoff docs.
+  `ee9fbd9` (`feat: pair the two panels with combination states`),
+  preceded by `cac2f55` (`feat: give the monkey idle life`); later commits
+  may update handoff docs.
 - The hosted development backend is Supabase project `gexgntxhrgywdqmaxrkf`;
   public app values live only in ignored `.env` files.
-- This managed Codex workspace uses `.git-local` because `.git` is an immutable
-  mount. A normal clone, including one opened with Claude Code, should use the
-  standard `.git` directory and ordinary Git commands.
+- The repository uses a standard `.git` directory and ordinary Git commands.
+  Earlier managed Codex workspaces kept the repository in `.git-local` because
+  `.git` was an immutable mount there; that workaround has been undone and
+  should not be reintroduced.
 
 ## End-of-session checklist
 
